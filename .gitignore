@@ -25,3 +25,10 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Backend app artifacts
+/backend/node_modules/
+/backend/public/build/
+/backend/storage/pail/
+/backend/pnpm-lock.yaml
+/backend/vendor/
