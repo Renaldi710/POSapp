@@ -1,0 +1,98 @@
+POSMobile/
+├── app/                          # Expo Router — semua screen/route
+│   ├── _layout.tsx               # Root layout (providers, toast, query client)
+│   ├── index.tsx                 # Redirect berdasarkan auth state
+│   │
+│   ├── (auth)/                   # Grup: halaman sebelum login
+│   │   ├── _layout.tsx           # Auth layout (centered card)
+│   │   ├── login.tsx             # Screen Login
+│   │   └── register.tsx          # Screen Register
+│   │
+│   └── (app)/                    # Grup: halaman setelah login
+│       ├── _layout.tsx           # App layout (tab bar + header)
+│       │
+│       ├── (tabs)/               # Grup: Bottom Tab Navigator
+│       │   ├── _layout.tsx       # Tab bar config
+│       │   ├── pos.tsx           # Tab: POS / Kasir
+│       │   ├── products.tsx      # Tab: Daftar Produk
+│       │   ├── reports.tsx       # Tab: Laporan Keuangan
+│       │   └── settings.tsx      # Tab: Pengaturan
+│       │
+│       ├── products/
+│       │   ├── [id].tsx          # Detail produk
+│       │   └── add.tsx           # Tambah produk manual
+│       │
+│       ├── cart/
+│       │   └── index.tsx         # Keranjang & proses transaksi
+│       │
+│       ├── transactions/
+│       │   ├── index.tsx         # Riwayat transaksi
+│       │   └── [id].tsx          # Detail transaksi + cetak struk
+│       │
+│       └── stock/
+│           └── import.tsx        # Import CSV produk
+│
+├── components/                   # Reusable UI components
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Card.tsx
+│   │   ├── Badge.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Skeleton.tsx
+│   │   └── EmptyState.tsx
+│   ├── pos/
+│   │   ├── ProductGrid.tsx       # Grid produk di layar kasir
+│   │   ├── CartItem.tsx          # Item di keranjang
+│   │   ├── PaymentModal.tsx      # Modal pilih metode bayar
+│   │   └── ReceiptPreview.tsx    # Preview struk sebelum print
+│   ├── products/
+│   │   ├── ProductCard.tsx
+│   │   └── StockBadge.tsx
+│   └── reports/
+│       ├── RevenueChart.tsx
+│       ├── SummaryCard.tsx
+│       └── TransactionTable.tsx
+│
+├── lib/                          # Core logic — non-UI
+│   ├── api/
+│   │   ├── client.ts             # Axios instance + interceptors
+│   │   ├── auth.ts               # login(), register() calls
+│   │   └── products.ts           # getProducts(), syncProducts()
+│   ├── db/
+│   │   ├── schema.ts             # SQLite table definitions
+│   │   ├── migrations.ts         # DB version migrations
+│   │   ├── products.db.ts        # CRUD produk lokal
+│   │   ├── transactions.db.ts    # CRUD transaksi lokal
+│   │   └── sync.ts               # Offline → online sync logic
+│   ├── bluetooth/
+│   │   ├── scanner.ts            # Scan & connect BT printer
+│   │   ├── printer.ts            # Format & kirim data ESC/POS
+│   │   └── receipt.ts            # Template struk
+│   ├── csv/
+│   │   └── importer.ts           # Parse CSV → SQLite insert
+│   └── utils/
+│       ├── currency.ts           # formatRupiah()
+│       ├── date.ts               # formatDate()
+│       └── network.ts            # isOnline() hook
+│
+├── store/                        # Zustand global state
+│   ├── auth.store.ts             # User, token, login/logout
+│   ├── cart.store.ts             # Item cart, total, actions
+│   ├── sync.store.ts             # Sync queue, status
+│   └── printer.store.ts          # Connected printer state
+│
+├── hooks/                        # Custom hooks
+│   ├── useOfflineSync.ts
+│   ├── useBluetoothPrinter.ts
+│   └── useNetworkStatus.ts
+│
+├── types/                        # TypeScript type definitions
+│   ├── api.types.ts              # API request/response shapes
+│   ├── db.types.ts               # SQLite row shapes
+│   └── common.types.ts           # Shared types
+│
+└── constants/
+    ├── colors.ts
+    ├── theme.ts
+    └── config.ts                 # API base URL, version
