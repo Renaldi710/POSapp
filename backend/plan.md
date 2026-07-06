@@ -25,16 +25,16 @@ Mobile app **DILARANG** query langsung ke DB.
 - [x] Setup API Rate Limiting bawaan Laravel.
 
 ### Phase 2: Core Business Logic (Week 2)
-- [ ] **Products & Categories:** API Resource Controllers dengan validasi bawaan (`$request->validate()`).
-- [ ] **Stock Management:** Logic *auto-decrement* stok saat checkout menggunakan `DB::transaction()` dan `lockForUpdate()` (Pessimistic Locking untuk cegah race condition).
-- [ ] **Transactions:** Endpoint `POST /api/transactions` dengan validasi stok.
-- [ ] **Reporting:** Endpoint agregasi (`GET /api/reports/daily`) menggunakan Eloquent `withSum` / `withCount` atau Query Builder.
+- [x] **Products & Categories:** API Resource Controllers dengan validasi bawaan (`$request->validate()`).
+- [x] **Stock Management:** Logic *auto-decrement* stok saat checkout menggunakan `DB::transaction()` dan `lockForUpdate()` (Pessimistic Locking untuk cegah race condition).
+- [x] **Transactions:** Endpoint `POST /api/transactions` dengan validasi stok.
+- [x] **Reporting:** Endpoint agregasi (`GET /api/reports/daily`) menggunakan Eloquent `withSum` / `withCount` atau Query Builder.
 
 ### Phase 3: Security & Operations (Week 3)
-- [ ] **Auth Middleware:** Protect routes dengan `auth:sanctum`.
-- [ ] **CORS:** Konfigurasi `config/cors.php` untuk allow Expo Dev Server.
-- [ ] **Observability:** Laravel Log channels (daily logs).
-- [ ] **Health Check:** Endpoint `GET /api/health`.
+- [x] **Auth Middleware:** Protect routes with `auth:sanctum`.
+- [x] **CORS:** Konfigurasi `config/cors.php` untuk allow Expo Dev Server.
+- [x] **Observability:** Laravel Log channels (daily logs).
+- [x] **Health Check:** Endpoint `GET /api/health`.
 
 ## 4. Strict Boundaries (YAGNI & Anti-Patterns)
 **JANGAN lakukan hal berikut untuk MVP:**

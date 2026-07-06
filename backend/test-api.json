@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8081"
+      "value": "http://localhost:8000"
     },
     {
       "key": "token",
@@ -232,6 +232,44 @@
               "raw": "{{base_url}}/api/transactions/1",
               "host": ["{{base_url}}"],
               "path": ["api", "transactions", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Daily Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/daily",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "daily"]
+            }
+          }
+        },
+        {
+          "name": "Daily Report - Custom Date",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/daily?date=2026-07-05",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "daily"],
+              "query": [
+                { "key": "date", "value": "2026-07-05" }
+              ]
             }
           }
         }

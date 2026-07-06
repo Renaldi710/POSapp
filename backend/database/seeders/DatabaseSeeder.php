@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Category;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -15,5 +16,10 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
             'role' => 'admin',
         ]);
+
+        $categories = ['Makanan', 'Minuman', 'Snack', 'Lainnya'];
+        foreach ($categories as $name) {
+            Category::create(['name' => $name]);
+        }
     }
 }
