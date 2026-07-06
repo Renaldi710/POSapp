@@ -19,8 +19,12 @@ Route::post('/tokens/create', function (Request $request) {
     return ['token' => $user->createToken($request->device_name)->plainTextToken];
 });
 
+Route::get('/health', fn () => response()->json(['status' => 'ok']));
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (Request $r) => $r->user());
+
+    Route::get('/reports/daily', [\App\Http\Controllers\Api\ReportController::class, 'daily']);
 
     Route::apiResource('categories', \App\Http\Controllers\Api\CategoryController::class);
     Route::apiResource('products', \App\Http\Controllers\Api\ProductController::class);
