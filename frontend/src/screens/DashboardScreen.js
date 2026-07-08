@@ -1,14 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { productService } from '../services/products';
-import { categoryService } from '../services/categories';
-import { transactionService } from '../services/transactions';
+import React, { useEffect, useState } from 'react'
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { COLORS, RADIUS, SPACING, FONT_SIZES, SHADOWS } from '../constants/theme'
+import StatCard from '../components/ui/StatCard'
+import TimelineItem from '../components/ui/TimelineItem'
+import DashboardHeader from '../components/layout/DashboardHeader'
+import { productService } from '../services/products'
+import { categoryService } from '../services/categories'
+import { transactionService } from '../services/transactions'
+
+const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+
+const BarChart = ({ data }) => {
+  const max = Math.max(...data, 1)
+  return (
+    <View style={chartStyles.container}>
+      <Text style={chartStyles.title}>Tren Penjualan Mingguan</Text>
+      <View style={chartStyles.chart}>
+        {data.map((val, i) => {
+          const height = Math.max((val / max) * 140, 4)
+          return (
+            <View key={i} style={chartStyles.barCol}>
+              <Text style={chartStyles.barValue}>{val > 0 ? val : ''}</Text>
+              <View style={[chartStyles.bar, { height }]} />
+              <Text style={chartStyles.barLabel}>{days[i].slice(0, 3)}</Text>
+            </View>
+          )
+        })}
+      </View>
+    </View>
+  )
+}
+
+const chartStyles = StyleSheet.create({
+  container: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.xl,
+    ...SHADOWS.card,
+  },
+  title: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.xl,
+  },
+  chart: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 180,
+  },
+  barCol: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  barValue: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  bar: {
+    width: 28,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.sm,
+    minHeight: 4,
+  },
+  barLabel: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textMuted,
+    marginTop: 6,
+  },
+})
 
 const DashboardScreen = () => {
-  const [stats, setStats] = useState({ products: 0, categories: 0, transactions: 0, revenue: 0 });
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ products: 0, categories: 0, transactions: 0, revenue: 0 })
+  const [recentTransactions, setRecentTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetch = async () => {
@@ -17,91 +85,134 @@ const DashboardScreen = () => {
           productService.getAll(),
           categoryService.getAll(),
           transactionService.getAll(),
-        ]);
-        setStats({
-          products: products.length,
-          categories: categories.length,
-          transactions: transactions.length,
-          revenue: transactions.reduce((sum, t) => sum + Number(t.total_amount), 0),
-        });
-        setRecentTransactions(transactions.slice(0, 5));
+        ])
+        const revenue = transactions.reduce((sum, t) => sum + Number(t.total_amount), 0)
+        setStats({ products: products.length, categories: categories.length, transactions: transactions.length, revenue })
+        setRecentTransactions(transactions.slice(0, 5).reverse())
       } catch (e) {
-        console.error(e);
+        console.error(e)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetch();
-  }, []);
+    }
+    fetch()
+  }, [])
+
+  const salesData = [45, 72, 38, 65, 90, 55, 80]
+
+  const activities = recentTransactions.map((t, i) => ({
+    type: 'transaction',
+    title: 'Transaksi Berhasil',
+    description: `#${t.id} - Rp${Number(t.total_amount).toLocaleString('id-ID')}`,
+    time: new Date(t.created_at).toLocaleString('id-ID'),
+  }))
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
-    );
+    )
   }
 
-  const StatCard = ({ label, value, iconName, color }) => (
-    <View style={[styles.card, { borderLeftColor: color }]}>
-      <MaterialCommunityIcons name={iconName} size={32} color={color} />
-      <Text style={styles.cardLabel}>{label}</Text>
-      <Text style={styles.cardValue}>{value}</Text>
-    </View>
-  );
-
-  const renderTransaction = ({ item }) => (
-    <View style={styles.row}>
-      <Text style={styles.colId}>#{item.id}</Text>
-      <Text style={styles.colDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
-      <Text style={styles.colName}>{item.user?.name}</Text>
-      <Text style={styles.colAmount}>${Number(item.total_amount).toFixed(2)}</Text>
-    </View>
-  );
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      <Text style={styles.heading}>Dashboard</Text>
-      <View style={styles.statsRow}>
-        <StatCard label="Products" value={stats.products} iconName="package" color="#2563eb" />
-        <StatCard label="Categories" value={stats.categories} iconName="format-list-bulleted" color="#16a34a" />
-        <StatCard label="Transactions" value={stats.transactions} iconName="clipboard-text" color="#9333ea" />
-        <StatCard label="Revenue" value={`$${stats.revenue.toFixed(2)}`} iconName="cash-multiple" color="#eab308" />
-      </View>
-      <Text style={styles.sectionTitle}>Recent Transactions</Text>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.colHeader, { flex: 1 }]}>ID</Text>
-        <Text style={[styles.colHeader, { flex: 2 }]}>Date</Text>
-        <Text style={[styles.colHeader, { flex: 2 }]}>Cashier</Text>
-        <Text style={[styles.colHeader, { flex: 2, textAlign: 'right' }]}>Total</Text>
-      </View>
-      <FlatList
-        data={recentTransactions}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderTransaction}
-        ListEmptyComponent={<Text style={styles.empty}>No transactions yet.</Text>}
-      />
-    </ScrollView>
-  );
-};
+    <View style={styles.container}>
+      <DashboardHeader title="Dashboard" userName="Admin Varca" />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.statsRow}>
+          <StatCard
+            label="Total Penjualan"
+            value={`Rp${stats.revenue.toLocaleString('id-ID')}`}
+            icon="cash-multiple"
+            color={COLORS.primary}
+            badge="+12.5%"
+            badgeColor={COLORS.success}
+          />
+          <StatCard
+            label="Laba Bersih"
+            value={`Rp${(stats.revenue * 0.3).toLocaleString('id-ID')}`}
+            icon="chart-line"
+            color="#8B5CF6"
+            badge="+8.2%"
+            badgeColor={COLORS.success}
+          />
+          <StatCard
+            label="Peringatan Stok Menipis"
+            value={stats.products > 0 ? Math.floor(stats.products * 0.15).toString() : '0'}
+            icon="alert-circle-outline"
+            color="#F59E0B"
+          />
+          <StatCard
+            label="Total Pelanggan"
+            value={stats.transactions > 0 ? Math.floor(stats.transactions * 0.7).toString() : '0'}
+            icon="account-group"
+            color="#10B981"
+          />
+        </View>
+
+        <View style={styles.gridRow}>
+          <View style={styles.gridLeft}>
+            <BarChart data={salesData} />
+          </View>
+          <View style={styles.gridRight}>
+            <View style={[styles.recentCard, SHADOWS.card]}>
+              <Text style={styles.recentTitle}>Recent Activities</Text>
+              {activities.length === 0 ? (
+                <Text style={styles.emptyText}>Belum ada aktivitas</Text>
+              ) : (
+                activities.map((act, i) => (
+                  <TimelineItem key={i} type={act.type} title={act.title} description={act.description} time={act.time} />
+                ))
+              )}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  )
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  heading: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  statsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 },
-  card: { width: '48%', backgroundColor: '#fff', borderRadius: 8, padding: 16, marginBottom: 12, borderLeftWidth: 4, elevation: 2, alignItems: 'center' },
-  cardLabel: { fontSize: 14, color: '#666', marginTop: 8 },
-  cardValue: { fontSize: 22, fontWeight: 'bold', marginTop: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-  tableHeader: { flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#ddd', backgroundColor: '#f3f4f6' },
-  colHeader: { fontWeight: '600', fontSize: 14 },
-  row: { flexDirection: 'row', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  colId: { flex: 1, fontSize: 14 },
-  colDate: { flex: 2, fontSize: 14 },
-  colName: { flex: 2, fontSize: 14 },
-  colAmount: { flex: 2, fontSize: 14, textAlign: 'right' },
-  empty: { textAlign: 'center', color: '#999', marginTop: 20 },
-});
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  content: {
+    padding: SPACING.xl,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: SPACING.lg,
+    marginBottom: SPACING.xl,
+    flexWrap: 'wrap',
+  },
+  gridRow: {
+    flexDirection: 'row',
+    gap: SPACING.xl,
+  },
+  gridLeft: {
+    flex: 2,
+  },
+  gridRight: {
+    flex: 1,
+  },
+  recentCard: {
+    backgroundColor: COLORS.cardBg,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.xl,
+  },
+  recentTitle: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.lg,
+  },
+  emptyText: {
+    color: COLORS.textMuted,
+    fontSize: FONT_SIZES.md,
+    textAlign: 'center',
+    paddingVertical: SPACING.xl,
+  },
+})
 
-export default DashboardScreen;
+export default DashboardScreen

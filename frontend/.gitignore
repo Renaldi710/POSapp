@@ -6,3 +6,8 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 .DS_Store
+*.log
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties

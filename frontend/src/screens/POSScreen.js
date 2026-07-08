@@ -1,167 +1,103 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
-import { usePOS } from '../context/POSContext';
-import { productService } from '../services/products';
-import { categoryService } from '../services/categories';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import ProductCard from '../components/ProductCard';
-import CartItem from '../components/CartItem';
-import ReceiptModal from '../components/ReceiptModal';
+import React, { useEffect, useState } from 'react'
+import { View, StyleSheet, ActivityIndicator } from 'react-native'
+import { COLORS } from '../constants/theme'
+import DashboardHeader from '../components/layout/DashboardHeader'
+import ProductGrid from '../components/pos/ProductGrid'
+import CartPanel from '../components/pos/CartPanel'
+import PaymentModal from '../components/pos/PaymentModal'
+import { usePOS } from '../context/POSContext'
+import { productService } from '../services/products'
 
 const POSScreen = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { cart, total, checkout, receipt, setReceipt } = usePOS();
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const data = await productService.getAll();
-      setProducts(data);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to load products');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    const data = await categoryService.getAll();
-    setCategories(data);
-  };
+  const [products, setProducts] = useState([])
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [showPayment, setShowPayment] = useState(false)
+  const { cart, total, addToCart, updateQuantity, removeFromCart, clearCart, checkout } = usePOS()
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
+    const fetch = async () => {
+      try {
+        const data = await productService.getAll()
+        setProducts(data)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetch()
+  }, [])
 
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = !categoryFilter || p.category_id == categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
+    const matchCategory = !categoryFilter || p.category?.name === categoryFilter
+    return matchSearch && matchCategory
+  })
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
+    if (cart.length === 0) return
+    setShowPayment(true)
+  }
+
+  const handlePaymentConfirm = async (paymentInfo) => {
     try {
-      await checkout();
-    } catch (error) {}
-  };
+      await checkout()
+      setShowPayment(false)
+    } catch (e) {}
+  }
 
-  const selectedCategoryName = categoryFilter ? categories.find(c => c.id == categoryFilter)?.name || 'All' : 'All';
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <MaterialCommunityIcons name="magnify" size={20} color="#888" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
-            value={search}
-            onChangeText={setSearch}
-          />
-        </View>
-        <TouchableOpacity style={styles.categoryButton} onPress={() => setShowCategoryModal(true)}>
-          <MaterialCommunityIcons name="filter" size={20} color="#fff" />
-          <Text style={styles.categoryButtonText}>{selectedCategoryName}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Modal visible={showCategoryModal} transparent={true} animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Category</Text>
-            <FlatList
-              data={[{ id: '', name: 'All' }, ...categories]}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.modalItem, categoryFilter == item.id && styles.modalItemActive]}
-                  onPress={() => {
-                    setCategoryFilter(item.id);
-                    setShowCategoryModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-            />
-            <TouchableOpacity style={styles.modalClose} onPress={() => setShowCategoryModal(false)}>
-              <Text style={styles.modalCloseText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {loading ? (
-        <ActivityIndicator style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={filteredProducts}
-          renderItem={({ item }) => <ProductCard product={item} />}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.productGrid}
+      <DashboardHeader title="POS" searchValue={search} onSearchChange={setSearch} userName="Admin Varca" />
+      <View style={styles.body}>
+        <ProductGrid
+          products={filteredProducts}
+          search={search}
+          onSearchChange={setSearch}
+          categoryFilter={categoryFilter}
+          onCategoryChange={setCategoryFilter}
+          onAddToCart={addToCart}
         />
-      )}
-
-      <View style={styles.cartArea}>
-        <Text style={styles.cartHeader}>Cart</Text>
-        <FlatList
-          data={cart}
-          keyExtractor={(item) => item.product.id.toString()}
-          renderItem={({ item }) => <CartItem item={item} />}
-          ListEmptyComponent={<Text style={styles.emptyCart}>Cart is empty</Text>}
+        <CartPanel
+          cart={cart}
+          total={total}
+          onUpdateQty={updateQuantity}
+          onRemove={removeFromCart}
+          onClear={clearCart}
+          onCheckout={handleCheckout}
         />
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.checkoutBtn, cart.length === 0 && styles.checkoutBtnDisabled]}
-          onPress={handleCheckout}
-          disabled={cart.length === 0}
-        >
-          <Text style={styles.checkoutBtnText}>Checkout</Text>
-        </TouchableOpacity>
       </View>
-
-      {receipt && (
-        <ReceiptModal transaction={receipt} visible={true} onClose={() => setReceipt(null)} />
-      )}
+      <PaymentModal
+        visible={showPayment}
+        onClose={() => setShowPayment(false)}
+        total={total * 1.11}
+        orderId={`ID-${88290 + Math.floor(Math.random() * 1000)}`}
+        itemCount={cart.length}
+        onConfirm={handlePaymentConfirm}
+      />
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  searchRow: { flexDirection: 'row', padding: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ddd', alignItems: 'center' },
-  searchBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#ddd', borderRadius: 4, paddingHorizontal: 8, flex: 1, marginRight: 8 },
-  searchInput: { flex: 1, padding: 8 },
-  categoryButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2563eb', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 4 },
-  categoryButtonText: { color: '#fff', marginLeft: 4, fontWeight: '600' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#fff', width: '80%', borderRadius: 8, padding: 16, maxHeight: '60%' },
-  modalTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
-  modalItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  modalItemActive: { backgroundColor: '#dbeafe' },
-  modalItemText: { fontSize: 16 },
-  modalClose: { marginTop: 12, padding: 12, backgroundColor: '#e5e7eb', borderRadius: 4, alignItems: 'center' },
-  modalCloseText: { color: '#333' },
-  productGrid: { padding: 8 },
-  cartArea: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#ddd', padding: 12, maxHeight: '35%' },
-  cartHeader: { fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
-  emptyCart: { textAlign: 'center', color: '#999', marginTop: 10 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, marginBottom: 12 },
-  totalLabel: { fontSize: 16, fontWeight: '600' },
-  totalValue: { fontSize: 18, fontWeight: 'bold' },
-  checkoutBtn: { backgroundColor: '#16a34a', padding: 12, borderRadius: 6, alignItems: 'center' },
-  checkoutBtnDisabled: { backgroundColor: '#9ca3af' },
-  checkoutBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-});
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  body: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+})
 
-export default POSScreen;
+export default POSScreen
