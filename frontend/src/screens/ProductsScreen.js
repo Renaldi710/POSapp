@@ -139,7 +139,7 @@ const ProductsScreen = () => {
           />
           <View style={styles.modalButtons}>
             <Button title="Cancel" onPress={() => { setShowForm(false); setEditing(null); }} />
-            <Button title={editing ? 'Update' : 'Add'} onPressed={handleSubmit} />
+            <Button title={editing ? 'Update' : 'Add'} onPress={handleSubmit} />
           </View>
         </View>
       </Modal>

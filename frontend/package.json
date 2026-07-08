@@ -11,6 +11,7 @@
     "build:ios": "expo build:ios"
   },
   "dependencies": {
+    "@babel/runtime": "^7.29.7",
     "@expo/vector-icons": "^13.0.0",
     "@react-native-async-storage/async-storage": "1.18.2",
     "@react-navigation/bottom-tabs": "^6.5.11",

@@ -1,46 +1,96 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { usePOS } from '../context/POSContext';
+import React from 'react'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { usePOS } from '../context/POSContext'
+import { COLORS, RADIUS, SPACING, FONT_SIZES } from '../constants/theme'
 
 const CartItem = ({ item }) => {
-  const { updateQuantity, removeFromCart } = usePOS();
-
-  const decrease = () => {
-    if (item.quantity > 1) updateQuantity(item.product.id, item.quantity - 1);
-  };
+  const { updateQuantity, removeFromCart } = usePOS()
 
   return (
     <View style={styles.row}>
-      <View style={{ flex: 3 }}>
+      <View style={styles.info}>
         <Text style={styles.name}>{item.product.name}</Text>
-        <Text style={styles.price}>@{Number(item.price).toFixed(2)}</Text>
+        <Text style={styles.price}>Rp{Number(item.product.price).toLocaleString('id-ID')}</Text>
       </View>
-      <View style={{ flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <TouchableOpacity onPress={decrease} style={styles.qtyButton}>
-          <MaterialCommunityIcons name="minus" size={16} color="#333" />
+      <View style={styles.qtyControl}>
+        <TouchableOpacity
+          style={styles.qtyBtn}
+          onPress={() => updateQuantity(item.product.id, item.quantity - 1)}
+        >
+          <MaterialCommunityIcons name="minus" size={16} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.qty}>{item.quantity}</Text>
-        <TouchableOpacity onPress={() => updateQuantity(item.product.id, item.quantity + 1)} style={styles.qtyButton}>
-          <MaterialCommunityIcons name="plus" size={16} color="#333" />
+        <TouchableOpacity
+          style={styles.qtyBtn}
+          onPress={() => updateQuantity(item.product.id, item.quantity + 1)}
+        >
+          <MaterialCommunityIcons name="plus" size={16} color={COLORS.textPrimary} />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={() => removeFromCart(item.product.id)} style={styles.deleteButton}>
-        <MaterialCommunityIcons name="trash-can" size={16} color="#dc2626" />
+      <Text style={styles.subtotal}>
+        Rp{(item.product.price * item.quantity).toLocaleString('id-ID')}
+      </Text>
+      <TouchableOpacity onPress={() => removeFromCart(item.product.id)} style={styles.deleteBtn}>
+        <MaterialCommunityIcons name="trash-can-outline" size={16} color={COLORS.danger} />
       </TouchableOpacity>
-      <Text style={styles.subtotal}>${(item.price * item.quantity).toFixed(2)}</Text>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  name: { fontSize: 14, fontWeight: '500' },
-  price: { fontSize: 12, color: '#666' },
-  qtyButton: { padding: 4, backgroundColor: '#e5e7eb', borderRadius: 4 },
-  qty: { width: 24, textAlign: 'center', fontSize: 14 },
-  deleteButton: { padding: 4, marginLeft: 8 },
-  subtotal: { flex: 1, textAlign: 'right', fontWeight: '600', fontSize: 14 },
-});
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  info: {
+    flex: 1,
+  },
+  name: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  price: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  qtyControl: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  qtyBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qty: {
+    width: 28,
+    textAlign: 'center',
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  subtotal: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    minWidth: 80,
+    textAlign: 'right',
+    marginRight: SPACING.sm,
+  },
+  deleteBtn: {
+    padding: 4,
+  },
+})
 
-export default CartItem;
+export default CartItem

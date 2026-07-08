@@ -1,6 +1,12 @@
 import axios from 'axios';
+import { storage } from '../utils/storage';
+import { Platform } from 'react-native';
 
-const baseURL = '/api'; // uses Vite proxy in dev, same-origin in prod
+const baseURL = Platform.select({
+  web: '/api',
+  android: 'http://10.0.2.2:8000/api',
+  default: 'http://localhost:8000/api',
+});
 
 export const api = axios.create({
   baseURL,
@@ -10,8 +16,8 @@ export const api = axios.create({
   },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+api.interceptors.request.use(async (config) => {
+  const token = await storage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -20,10 +26,9 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      await storage.removeItem('token');
     }
     return Promise.reject(error);
   }

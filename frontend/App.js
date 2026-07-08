@@ -1,18 +1,22 @@
-import 'react-native-gesture-handler';
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { AuthProvider } from './src/context/AuthContext';
-import { POSProvider } from './src/context/POSContext';
-import AppNavigator from './src/navigation/AppNavigator';
+import React from 'react'
+import { AuthProvider, useAuth } from './src/context/AuthContext'
+import { POSProvider } from './src/context/POSContext'
+import MainNavigator from './src/navigation/MainNavigator'
+
+const AppContent = () => {
+  const { user, login, logout } = useAuth()
+
+  return (
+    <POSProvider>
+      <MainNavigator user={user} onLogin={login} onLogout={logout} />
+    </POSProvider>
+  )
+}
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <AuthProvider>
-        <POSProvider>
-          <AppNavigator />
-        </POSProvider>
-      </AuthProvider>
-    </NavigationContainer>
-  );
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  )
 }
