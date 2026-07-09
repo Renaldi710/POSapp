@@ -1,392 +1,116 @@
-<!-- Banner -->
-<p align="center">
-  <img src="https://img.shields.io/badge/POS-App-4F46E5?style=for-the-badge&logo=shoppingcart&logoColor=white" alt="POS App Banner"/>
-</p>
+# POSapp — VarcaTech
 
-<h1 align="center">POSapp</h1>
-
-<p align="center">
-  💰 Aplikasi Point of Sale untuk UMKM Indonesia
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/React%20Native-61DAFB?style=flat-square&logo=react" alt="React Native"/>
-  <img src="https://img.shields.io/badge/Expo-000020?style=flat-square&logo=expo" alt="Expo"/>
-  <img src="https://img.shields.io/badge/Laravel-FF2D20?style=flat-square&logo=laravel" alt="Laravel"/>
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
-</p>
+Aplikasi **Point of Sale (POS)** untuk UMKM berbasis mobile & web. Mengelola penjualan, inventaris stok, dan laporan keuangan secara real-time.
 
 ---
 
-## 📋 Daftar Isi
+## Tech Stack
 
-- [Tentang Project](#tentang-project)
-- [Fitur](#fitur)
-- [Tech Stack](#tech-stack)
-- [Struktur Proyek](#struktur-proyek)
-- [Persyaratan](#persyaratan)
-- [Instalasi](#instalasi)
-  - [Clone Repository](#1-clone-repository)
-  - [Backend Setup](#2-backend-setup)
-  - [Frontend Setup](#3-frontend-setup)
-  - [Menjalankan Aplikasi](#4-menjalankan-aplikasi)
-- [KCredentials Testing](#credentials-testing)
-- [API Endpoints](#api-endpoints)
-- [Screenshot](#screenshot)
-- [Dokumentasi](#dokumentasi)
-- [Kontribusi](#kontribusi)
-- [Lisensi](#lisensi)
+| Layer | Teknologi |
+|-------|-----------|
+| **Backend** | Laravel 11 / PHP 8.5, SQLite, Sanctum Auth |
+| **Frontend Web & iOS** | React Native (Expo SDK 49) |
+| **Frontend Android Native** | Kotlin, Jetpack Compose, Material3, Hilt, Room |
+
+> **Catatan:** Android native dan Expo adalah **2 frontend terpisah**, bukan Kotlin Multiplatform. Kode tidak di-share.
 
 ---
 
-## 🎯 Tentang Project
-
-POSapp adalah aplikasi Point of Sale (Kasir) berbasis mobile dengan backend API, dirancang khusus untuk kebutuhan UMKM di Indonesia. Aplikasi ini memungkinkan:
-
-- ✅ Manajemen produk dan kategori
-- ✅ Proses penjualan (POS) yang cepat
-- ✅ Manajemen stok barang
-- ✅ Riwayat transaksi lengkap
-- ✅ Multi-role user (Admin & Cashier)
-
-### Target Pengguna
-
-| Sektor | Contoh |
-|--------|--------|
-| 🏪 Retail | Minimarket, warung, toko kelontong |
-| 🍔 F&B | Rumah makan, café, kantin |
-| 👔 Service | Laundry, barber shop, salon |
-
----
-
-## ✨ Fitur
-
-### 🔐 Autentikasi & Role
-- Login dengan email/password
-- Role-based access control (Admin & Cashier)
-- Token-based session (Laravel Sanctum)
-- Auto-logout saat token expire
-
-### 📊 Dashboard
-- Statistik lengkap: produk, kategori, transaksi, pendapatan
-- Transaksi terakhir (5 terbaru)
-
-### 💳 Point of Sale
-- Grid produk dengan search & filter
-- Keranjang interaktif
-- Validasi stok real-time
-- Checkout & receipt
-
-### 📦 Manajemen Produk (Admin)
-- CRUD produk lengkap
-- Filter & pencarian
-- Update stok
-
-### 🏷️ Manajemen Kategori (Admin)
-- CRUD kategori
-- Relasi dengan produk
-
-### 📜 Transaksi
-- Riwayat lengkap
-- Detail via receipt modal
-
----
-
-## 🛠️ Tech Stack
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        FRONTEND                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │   React     │  │    Expo     │  │  React Navigation   ││
-│  │   Native    │  │             │  │                     ││
-│  └─────────────┘  └─────────────┘  └─────────────────────┘│
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │    Axios    │  │   Async     │  │     Tailwind        ││
-│  │             │  │   Storage   │  │       CSS           ││
-│  └─────────────┘  └─────────────┘  └─────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼ API (REST)
-┌─────────────────────────────────────────────────────────────┐
-│                         BACKEND                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │   Laravel   │  │  Laravel    │  │      MySQL /         ││
-│  │     13      │  │  Sanctum    │  │      SQLite          ││
-│  └─────────────┘  └─────────────┘  └─────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Frontend Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| react-native | 0.72.6 | UI Framework |
-| expo | ~49.0.0 | Dev Platform |
-| @react-navigation | ^6.1.9 | Navigation |
-| axios | ^1.6.2 | HTTP Client |
-| @react-native-async-storage | 1.18.2 | Local Storage |
-
-### Backend Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| laravel/framework | ^13.8 | PHP Framework |
-| laravel/sanctum | ^4.3 | API Authentication |
-| laravel/tinker | ^3.0 | REPL |
-
----
-
-## 📂 Struktur Proyek
+## Struktur Proyek
 
 ```
 POSapp/
-├── README.md              # Dokumentasi utama
-├── LICENSE                # MIT License
-│
-├── backend/               # Laravel API Backend
-│   ├── app/               # Application code
-│   ├── config/            # Configuration files
-│   ├── database/          # Migrations & Seeders
-│   ├── routes/            # API Routes
-│   ├── composer.json      # PHP Dependencies
-│   ├── .env               # Environment config
-│   └── README.md          # Backend docs
-│
-└── frontend/              # React Native Mobile App
-    ├── src/
-    │   ├── components/     # UI Components
-    │   ├── context/       # State Management
-    │   ├── navigation/    # Navigation Config
-    │   ├── pages/         # Screen Components
-    │   ├── screens/       # Legacy Screens
-    │   └── services/      # API Services
-    ├── package.json       # Node Dependencies
-    ├── .env.example       # Environment template
-    └── README.md          # Frontend docs
+├── backend/                 # Laravel API (PHP)
+│   ├── app/
+│   ├── database/
+│   ├── routes/
+│   └── ...
+├── frontend/                # React Native (Expo) — iOS, Android, Web
+│   ├── src/
+│   │   ├── components/
+│   │   ├── constants/
+│   │   ├── context/
+│   │   ├── navigation/
+│   │   ├── screens/         # 7 screens
+│   │   └── services/
+│   └── App.js
+├── front/                   # Android Native (Kotlin + Compose)
+│   └── android/
+│       ├── app/             # Module :app
+│       └── build.gradle.kts
+├── README.md
+└── LICENSE (MIT)
 ```
 
 ---
 
-## 📌 Persyaratan
+## Cara Menjalankan
 
-### Software
-
-| Software | Minimum Version | Purpose |
-|----------|----------------|---------|
-| Node.js | >= 18.x | Frontend runtime |
-| PHP | >= 8.3 | Backend runtime |
-| Composer | >= 2.x | PHP package manager |
-| pnpm / npm | >= 8.x / >= 9.x | JS package manager |
-| MySQL | 8.0+ | Database (production) |
-| SQLite | 3.x | Database (development) |
-
-### Hardware
-
-- RAM minimum 4GB
-- Storage 500MB+
-- Android Studio / Xcode (untuk emulator)
-
----
-
-## 🚀 Instalasi
-
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/Renaldi710/POSapp.git
-cd POSapp
-```
-
-### 2. Backend Setup
+### 1. Backend (Laravel)
 
 ```bash
 cd backend
-
-# Install dependencies
+cp .env.example .env   # sudah ada .env dengan SQLite
 composer install
-
-# Copy environment file
-cp .env.example .env
-
-# Generate application key
-php artisan key:generate
-
-# Run migrations
-php artisan migrate
-
-# Seed initial data (optional)
-php artisan db:seed
-
-# Start development server
-php artisan serve
+php artisan migrate --seed   # seeder: admin@pos.app / password
+php artisan serve            # http://localhost:8000
 ```
 
-Backend akan berjalan di `http://localhost:8000`
+### 2. Android Native (Kotlin)
 
-### 3. Frontend Setup
+```bash
+cd front/android
+# Pastikan local.properties ada (sdk.dir)
+./gradlew :app:installDebug   # install ke emulator running
+```
 
-Buka terminal baru:
+Atau buka `front/android/` di Android Studio → **Sync** → **Run ▶**
+
+**Konfigurasi Android:**
+- `minSdk`: 24, `targetSdk`: 34, `compileSdk`: 34
+- Kotlin `1.9.22`, AGP `8.2.2`, Compose BOM `2024.02.00`
+- Hilt `2.50`, Room `2.6.1`, Retrofit `2.9.0`
+- **Orientation:** `sensorLandscape` (tablet landscape)
+- API endpoint: `http://10.0.2.2:8000/api/` (host loopback dari emulator)
+
+### 3. React Native / Expo (iOS, Android, Web)
 
 ```bash
 cd frontend
-
-# Install dependencies
-pnpm install
-# atau
 npm install
-
-# Copy environment file
-cp .env.example .env
-
-# Edit .env - sesuaikan API_URL
-# Untuk Android Emulator: API_URL=http://10.0.2.2:8000/api
-# Untuk iOS Simulator:    API_URL=http://localhost:8000/api
-# Untuk Device Fisik:     API_URL=http://<IP_KOMPUTER>:8000/api
-```
-
-### 4. Menjalankan Aplikasi
-
-#### Development Server
-
-**Frontend:**
-```bash
-cd frontend
-pnpm start
-```
-Pilih platform: `a` (Android), `i` (iOS), `w` (Web)
-
-**Backend:**
-```bash
-cd backend
-php artisan serve
-```
-
-#### Production Build
-
-**Android APK:**
-```bash
-cd frontend
-eas build --platform android
-```
-
-**iOS:**
-```bash
-cd frontend
-eas build --platform ios
+npx expo start --web     # Web
+npx expo start --ios     # iOS Simulator
+npx expo start --android # Android Emulator
 ```
 
 ---
 
-## 🔑 Credentials Testing
+## Login
 
-Gunakan credentials berikut setelah menjalankan seed:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@example.com | password |
-| Cashier | cashier@example.com | password |
+```
+Email:    admin@pos.app
+Password: password
+```
 
 ---
 
-## 🔌 API Endpoints
+## Fitur Android Native
 
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/tokens/create` | Login user |
-| GET | `/api/user` | Get current user |
-
-### Products
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/products` | List all products |
-| POST | `/api/products` | Create product |
-| GET | `/api/products/{id}` | Get product detail |
-| PUT | `/api/products/{id}` | Update product |
-| DELETE | `/api/products/{id}` | Delete product |
-
-### Categories
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/categories` | List all categories |
-| POST | `/api/categories` | Create category |
-| PUT | `/api/categories/{id}` | Update category |
-| DELETE | `/api/categories/{id}` | Delete category |
-
-### Transactions
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/transactions` | List transactions |
-| POST | `/api/transactions` | Create transaction |
-
-### Additional
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/health` | Health check |
-| GET | `/api/reports` | Dashboard stats |
-
-Lihat [API_CONTRACT.md](./backend/API_CONTRACT.md) untuk detail lengkap.
+| Screen | Fitur |
+|--------|-------|
+| **Login** | Email + password, token-based auth |
+| **Dashboard** | 4 stat cards, 6 nav buttons (horizontal scroll), recent transactions |
+| **POS** | Grid produk (search + kategori filter), cart panel 320dp, subtotal + pajak 11% |
+| **Payment** | 3 metode (Tunai/QRIS/Kartu), grid denominasi Rp5k–Rp100k, kalkulator kembalian |
+| **Products** | List produk CRUD |
+| **Categories** | List kategori CRUD |
+| **Customers** | List pelanggan CRUD |
+| **Transactions** | Riwayat transaksi + detail receipt |
+| **Settings** | Profile, store info, printer (Bluetooth), server URL |
+| **Bluetooth** | Scan, pair, connect thermal printer |
 
 ---
 
-## 🖼️ Screenshot
+## Lisensi
 
-| POS Screen | Dashboard |
-|:---:|:---:|
-| ![POS](https://via.placeholder.com/300x500?text=POS+Screen) | ![Dashboard](https://via.placeholder.com/300x500?text=Dashboard) |
-
-| Products | Transactions |
-|:---:|:---:|
-| ![Products](https://via.placeholder.com/300x500?text=Products) | ![Transactions](https://via.placeholder.com/300x500?text=Transactions) |
-
----
-
-## 📚 Dokumentasi
-
-| Document | Location | Description |
-|----------|----------|-------------|
-| API Contract | `backend/API_CONTRACT.md` | Complete API documentation |
-| Backend README | `backend/README.md` | Laravel-specific setup |
-| Frontend README | `frontend/README.md` | Mobile app setup |
-| PRD | `frontend/PRD.md` | Product Requirements |
-
----
-
-## 🤝 Kontribusi
-
-Kontribusi sangat diterima! Ikuti langkah berikut:
-
-1. **Fork** repository ini
-2. Buat **Branch** baru (`git checkout -b feature/AmazingFeature`)
-3. **Commit** perubahan (`git commit -m 'Add AmazingFeature'`)
-4. **Push** ke branch (`git push origin feature/AmazingFeature`)
-5. Buka **Pull Request**
-
-### Guidelines
-
-- 📝 Ikuti code style project
-- ✅ Test sebelum submit PR
-- 📖 Update dokumentasi jika perlu
-- 💬 Diskusikan fitur besar dulu via Issue
-
----
-
-## 📄 Lisensi
-
-Project ini dilisensikan di bawah MIT License. Lihat file [LICENSE](./LICENSE) untuk informasi lebih lanjut.
-
----
-
-## 👨‍💻 Author
-
-**Renaldi**
-
-- GitHub: [@Renaldi710](https://github.com/Renaldi710)
-- Project: [POSapp](https://github.com/Renaldi710/POSapp)
-
----
-
-<div align="center">
-  <p>Made with ❤️ for Indonesian MSMEs</p>
-</div>
+MIT
