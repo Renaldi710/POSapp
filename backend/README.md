@@ -1,58 +1,379 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<!-- Banner -->
+<div align="center">
+  <img src="https://img.shields.io/badge/POS-Backend%20API-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="POS Backend Banner"/>
+  <h1>POSapp Backend</h1>
+  <p>REST API Backend untuk aplikasi Point of Sale - dibangun dengan Laravel 13</p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+  <!-- Badges -->
+  ![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=FFF)
+  ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=FFF)
+  ![Sanctum](https://img.shields.io/badge/Sanctum-FF2D20?style=for-the-badge&logo=laravel&logoColor=FFF)
+  ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+</div>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Daftar Isi
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- [Gambaran Umum](#gambaran-umum)
+- [Tech Stack](#tech-stack)
+- [Persyaratan](#persyaratan)
+- [Instalasi](#instalasi)
+  - [Clone Repository](#1-clone-repository)
+  - [Install Dependencies](#2-install-dependencies)
+  - [Konfigurasi Environment](#3-konfigurasi-environment)
+  - [Setup Database](#4-setup-database)
+  - [Jalankan Server](#5-jalankan-server)
+- [Struktur Proyek](#struktur-proyek)
+- [API Endpoints](#api-endpoints)
+- [API Contract](#api-contract)
+- [Testing](#testing)
+- [Build untuk Produksi](#build-untuk-produksi)
+- [Dokumentasi](#dokumentasi)
+- [Kontribusi](#kontribusi)
+- [Lisensi](#lisensi)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🎯 Gambaran Umum
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+POSapp Backend adalah REST API yang dibangun dengan Laravel 13 untuk mendukung aplikasi Point of Sale mobile. API ini menangani autentikasi, manajemen produk, kategori, dan transaksi dengan menggunakan Laravel Sanctum untuk token-based authentication.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Fitur Utama
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- 🔐 **Autentikasi** — Token-based auth dengan Laravel Sanctum
+- 📦 **Produk** — CRUD lengkap dengan validasi
+- 🏷️ **Kategori** — Manajemen kategori produk
+- 💳 **Transaksi** — Proses penjualan dan receipt
+- 📊 **Reports** — Statistik dashboard
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## 🛠️ Tech Stack
 
-```bash
-composer require laravel/boost --dev
+| Teknologi | Version | Deskripsi |
+|-----------|---------|-----------|
+| Laravel | ^13.8 | PHP Framework |
+| PHP | ^8.3 | Runtime |
+| Laravel Sanctum | ^4.3 | API Authentication |
+| MySQL/SQLite | - | Database |
+| Composer | ^2.x | Package Manager |
 
-php artisan boost:install
+### Dependencies
+
+```json
+{
+  "laravel/framework": "^13.8",
+  "laravel/sanctum": "^4.3",
+  "laravel/tinker": "^3.0"
+}
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Dev Dependencies
 
-## Contributing
+```json
+{
+  "fakerphp/faker": "^1.23",
+  "laravel/pint": "^1.27",
+  "mockery/mockery": "^1.6",
+  "phpunit/phpunit": "^12.5.12"
+}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 📌 Persyaratan
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Sebelum memulai, pastikan sudah memenuhi:
 
-## Security Vulnerabilities
+| Software | Minimum Version | Purpose |
+|----------|----------------|---------|
+| PHP | 8.3+ | Runtime |
+| Composer | 2.x | Package Manager |
+| MySQL | 8.0+ | Database (production) |
+| SQLite | 3.x | Database (development) |
+| Node.js | 18.x+ | Optional (frontend assets) |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🚀 Instalasi
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Renaldi710/POSapp.git
+cd POSapp/backend
+```
+
+### 2. Install Dependencies
+
+```bash
+composer install
+```
+
+### 3. Konfigurasi Environment
+
+Salin file contoh environment:
+
+```bash
+cp .env.example .env
+```
+
+Edit file `.env`:
+
+```env
+# Application
+APP_NAME=POSapp
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+# Database (Development - SQLite)
+DB_CONNECTION=sqlite
+DB_DATABASE=/path/to/database.sqlite
+
+# Database (Production - MySQL)
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=posapp
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+# Sanctum
+SANCTUM_STATEFUL_DOMAINS=localhost,localhost:8000,127.0.0.1,127.0.0.1:8000
+```
+
+### 4. Setup Database
+
+```bash
+# Generate application key
+php artisan key:generate
+
+# Run migrations
+php artisan migrate
+
+# Seed initial data (admin & cashier user)
+php artisan db:seed
+
+# Atau gunakan command setup single-step
+composer setup
+```
+
+### 5. Jalankan Server
+
+```bash
+php artisan serve
+```
+
+Backend akan berjalan di `http://localhost:8000`
+
+---
+
+## 📂 Struktur Proyek
+
+```
+backend/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/        # API Controllers
+│   │   └── Middleware/         # Auth middleware
+│   └── Models/                 # Eloquent Models
+├── config/
+│   ├── app.php
+│   ├── sanctum.php
+│   └── database.php
+├── database/
+│   ├── migrations/             # Database migrations
+│   └── seeders/                # Database seeders
+├── routes/
+│   └── api.php                 # API routes
+├── tests/
+│   └── Unit/                   # Unit tests
+├── composer.json
+├── .env.example
+└── README.md
+```
+
+### Key Files
+
+| File | Deskripsi |
+|------|-----------|
+| `routes/api.php` | Definisi semua API endpoints |
+| `app/Models/` | Model Eloquent (User, Product, Category, Transaction) |
+| `database/migrations/` | Schema database |
+| `database/seeders/` | Sample data untuk testing |
+
+---
+
+## 🔌 API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| POST | `/api/tokens/create` | Login user |
+| GET | `/api/user` | Get current user |
+
+### Products
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| GET | `/api/products` | List all products |
+| POST | `/api/products` | Create product |
+| GET | `/api/products/{id}` | Get product detail |
+| PUT | `/api/products/{id}` | Update product |
+| DELETE | `/api/products/{id}` | Delete product |
+
+### Categories
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| GET | `/api/categories` | List all categories |
+| POST | `/api/categories` | Create category |
+| PUT | `/api/categories/{id}` | Update category |
+| DELETE | `/api/categories/{id}` | Delete category |
+
+### Transactions
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| GET | `/api/transactions` | List all transactions |
+| POST | `/api/transactions` | Create new transaction |
+
+### Reports
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| GET | `/api/health` | Health check |
+| GET | `/api/reports` | Dashboard statistics |
+
+---
+
+## 📄 API Contract
+
+Dokumentasi lengkap API tersedia di [API_CONTRACT.md](./API_CONTRACT.md)
+
+### Contoh Request
+
+**Login:**
+```bash
+curl -X POST http://localhost:8000/api/tokens/create \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "password"}'
+```
+
+**Get Products:**
+```bash
+curl -X GET http://localhost:8000/api/products \
+  -H "Authorization: Bearer {token}"
+```
+
+**Create Transaction:**
+```bash
+curl -X POST http://localhost:8000/api/transactions \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{"items": [{"product_id": 1, "quantity": 2}], "payment_method": "cash"}'
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+composer test
+
+# Run specific test
+php artisan test --filter=ProductTest
+```
+
+### Test Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@example.com | password |
+| Cashier | cashier@example.com | password |
+
+---
+
+## 📦 Build untuk Produksi
+
+### Environment Production
+
+```bash
+# Set environment
+APP_ENV=production
+APP_DEBUG=false
+
+# Generate key
+php artisan key:generate
+
+# Cache config
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Optimasi
+composer install --optimize-autoloader --no-dev
+```
+
+### Deployment
+
+```bash
+# Deploy ke server
+php artisan migrate --force
+php artisan db:seed --force
+```
+
+---
+
+## 📚 Dokumentasi
+
+| Document | Lokasi | Deskripsi |
+|----------|--------|-----------|
+| API Contract | `API_CONTRACT.md` | Dokumentasi lengkap API |
+| Main README | `../README.md` | Dokumentasi project utama |
+| Frontend README | `../frontend/README.md` | Dokumentasi mobile app |
+
+---
+
+## 🤝 Kontribusi
+
+Kontribusi sangat diterima! Ikuti langkah berikut:
+
+1. **Fork** repository ini
+2. Buat **Branch** baru (`git checkout -b feature/AmazingFeature`)
+3. **Commit** perubahan (`git commit -m 'Add AmazingFeature'`)
+4. **Push** ke branch (`git push origin feature/AmazingFeature`)
+5. Buka **Pull Request**
+
+### Guidelines
+
+- ✅ Ikuti Laravel best practices
+- ✅ Jalankan `composer pint` untuk code style
+- ✅ Test sebelum submit PR
+- 📖 Update dokumentasi jika perlu
+
+---
+
+## 📄 Lisensi
+
+Project ini dilisensikan di bawah MIT License. Lihat file [../LICENSE](../LICENSE) untuk informasi lebih lanjut.
+
+---
+
+## 👨‍💻 Author
+
+**Renaldi**
+
+- GitHub: [@Renaldi710](https://github.com/Renaldi710)
+- Project Link: [POSapp](https://github.com/Renaldi710/POSapp)
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for Indonesian MSMEs</p>
+</div>
