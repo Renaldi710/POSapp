@@ -11,7 +11,7 @@ import com.posmobile.domain.repository.TransactionRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
-// ponytail: simple per-transaction sync, upgrade to full conflict resolution if needed
+// ponytail: pushes pending transactions via itemsJson, markSynced on success
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
@@ -22,12 +22,13 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            val pendingTransactions = transactionRepository.getAll()
-            for (tx in pendingTransactions) {
+            val pendingTxs = transactionRepository.getPending()
+            for (tx in pendingTxs) {
                 val items = tx.items.map {
                     TransactionItemRequest(productId = it.productId, quantity = it.quantity)
                 }
                 api.createTransaction(TransactionRequest(items))
+                transactionRepository.markSynced(tx.id)
             }
             Result.success()
         } catch (e: Exception) {

@@ -25,6 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+*.pdf
 
 # Backend app artifacts
 /backend/node_modules/
@@ -32,3 +33,5 @@ Thumbs.db
 /backend/storage/pail/
 /backend/pnpm-lock.yaml
 /backend/vendor/
+/backend/.idea/
+/backend/env

@@ -23,7 +23,7 @@ import com.posmobile.data.database.entities.UserEntity
         TransactionItemEntity::class,
         UserEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class POSDatabase : RoomDatabase() {

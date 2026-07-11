@@ -21,5 +21,7 @@ data class TransactionEntity(
     @ColumnInfo(name = "user_id") val userId: Long,
     @ColumnInfo(name = "total_amount") val totalAmount: Double,
     val status: String,
-    @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis()
+    @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(name = "sync_status") val syncStatus: String = "synced",
+    @ColumnInfo(name = "items_json") val itemsJson: String? = null
 )

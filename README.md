@@ -1,6 +1,6 @@
 # POSapp — VarcaTech
 
-Aplikasi **Point of Sale (POS)** untuk UMKM berbasis mobile & web. Mengelola penjualan, inventaris stok, dan laporan keuangan secara real-time.
+Aplikasi **Point of Sale (POS)** untuk UMKM berbasis Android. Mengelola penjualan, inventaris stok, dan laporan keuangan secara real-time.
 
 ---
 
@@ -9,10 +9,7 @@ Aplikasi **Point of Sale (POS)** untuk UMKM berbasis mobile & web. Mengelola pen
 | Layer | Teknologi |
 |-------|-----------|
 | **Backend** | Laravel 11 / PHP 8.5, SQLite, Sanctum Auth |
-| **Frontend Web & iOS** | React Native (Expo SDK 49) |
-| **Frontend Android Native** | Kotlin, Jetpack Compose, Material3, Hilt, Room |
-
-> **Catatan:** Android native dan Expo adalah **2 frontend terpisah**, bukan Kotlin Multiplatform. Kode tidak di-share.
+| **Android** | Kotlin, Jetpack Compose, Material3, Hilt, Room |
 
 ---
 
@@ -25,19 +22,11 @@ POSapp/
 │   ├── database/
 │   ├── routes/
 │   └── ...
-├── frontend/                # React Native (Expo) — iOS, Android, Web
-│   ├── src/
-│   │   ├── components/
-│   │   ├── constants/
-│   │   ├── context/
-│   │   ├── navigation/
-│   │   ├── screens/         # 7 screens
-│   │   └── services/
-│   └── App.js
 ├── front/                   # Android Native (Kotlin + Compose)
 │   └── android/
 │       ├── app/             # Module :app
 │       └── build.gradle.kts
+├── prd-android.md           # PRD Android
 ├── README.md
 └── LICENSE (MIT)
 ```
@@ -73,16 +62,6 @@ Atau buka `front/android/` di Android Studio → **Sync** → **Run ▶**
 - **Orientation:** `sensorLandscape` (tablet landscape)
 - API endpoint: `http://10.0.2.2:8000/api/` (host loopback dari emulator)
 
-### 3. React Native / Expo (iOS, Android, Web)
-
-```bash
-cd frontend
-npm install
-npx expo start --web     # Web
-npx expo start --ios     # iOS Simulator
-npx expo start --android # Android Emulator
-```
-
 ---
 
 ## Login
@@ -107,6 +86,9 @@ Password: password
 | **Customers** | List pelanggan CRUD |
 | **Transactions** | Riwayat transaksi + detail receipt |
 | **Settings** | Profile, store info, printer (Bluetooth), server URL |
+| **Inventaris** | Stock list with green/yellow/red indicators, search, stock adjustment |
+| **Laporan** | Daily report summary (transactions, revenue, top products), date picker |
+| **User Management** | Current user info |
 | **Bluetooth** | Scan, pair, connect thermal printer |
 
 ---

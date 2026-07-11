@@ -25,6 +25,12 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(transactions: List<TransactionEntity>)
 
+    @Query("SELECT * FROM transactions WHERE sync_status = :status ORDER BY created_at ASC")
+    suspend fun getBySyncStatus(status: String): List<TransactionEntity>
+
+    @Query("UPDATE transactions SET sync_status = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: Long, status: String)
+
     @Query("DELETE FROM transactions")
     suspend fun deleteAll()
 }

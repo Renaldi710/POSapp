@@ -35,16 +35,4 @@ class SyncManager @Inject constructor(
             .enqueueUniqueWork("sync_pending", ExistingWorkPolicy.REPLACE, request)
     }
 
-    fun <T> syncOrLocal(networkCall: suspend () -> T, localCall: suspend () -> T): suspend () -> T = {
-        if (isOnline) {
-            try {
-                networkCall()
-            } catch (e: Exception) {
-                enqueueSync()
-                localCall()
-            }
-        } else {
-            localCall()
-        }
-    }
 }

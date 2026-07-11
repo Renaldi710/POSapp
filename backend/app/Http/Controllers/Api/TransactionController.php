@@ -61,4 +61,20 @@ class TransactionController extends Controller
     {
         return $transaction->load('items.product', 'user');
     }
+
+    public function update(Request $request, Transaction $transaction)
+    {
+        $validated = $request->validate([
+            'status' => 'sometimes|string|in:pending,completed,cancelled',
+        ]);
+
+        $transaction->update($validated);
+        return $transaction->load('items.product', 'user');
+    }
+
+    public function destroy(Transaction $transaction)
+    {
+        $transaction->delete();
+        return response()->noContent();
+    }
 }

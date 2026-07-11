@@ -6,8 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.posmobile.presentation.common.theme.POSMobileTheme
-import com.posmobile.presentation.navigation.NavGraph
+import com.posmobile.ui.theme.POSMobileTheme
+import com.posmobile.ui.navigation.NavGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
