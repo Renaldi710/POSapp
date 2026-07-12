@@ -9,4 +9,7 @@ export default function RootLayout() {
       <Stack />
     </QueryClientProvider>
   )
+
+export default function RootLayout() {
+  return <Stack />
 }
