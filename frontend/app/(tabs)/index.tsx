@@ -5,12 +5,16 @@ import { useProducts } from '../../src/features/products/hooks/useProducts'
 import { useCartStore } from '../../src/features/cart/store/useCartStore'
 import ProductCard from '../../src/components/ui/ProductCard'
 import CartBar from '../../src/features/cart/components/CartBar'
+import PaymentDialog from '../../src/features/transactions/components/PaymentDialog'
+import { useCheckout } from '../../src/features/transactions/hooks/useCheckout'
 import type { Product } from '../../src/api/types'
 
 export default function KasirScreen() {
   const [search, setSearch] = useState('')
+  const [showPayment, setShowPayment] = useState(false)
   const { data: products, isLoading } = useProducts(search)
   const addItem = useCartStore((s) => s.addItem)
+  const checkout = useCheckout()
 
   const handleAdd = useCallback(
     (product: Product) => addItem(product.id, product.name, Number(product.price)),
@@ -18,7 +22,20 @@ export default function KasirScreen() {
   )
 
   const handleCheckout = useCallback(() => {
-    router.push('/(tabs)')
+    setShowPayment(true)
+  }, [])
+
+  const handlePaymentConfirm = useCallback(
+    (data: { metode: string; uangDiterima: number; cetakStruk: boolean }) => {
+      checkout.mutate(data, {
+        onSuccess: () => setShowPayment(false),
+      })
+    },
+    [checkout],
+  )
+
+  const handlePaymentCancel = useCallback(() => {
+    setShowPayment(false)
   }, [])
 
   return (
@@ -62,6 +79,14 @@ export default function KasirScreen() {
       />
 
       <CartBar onCheckout={handleCheckout} />
+
+      <PaymentDialog
+        visible={showPayment}
+        totalAmount={useCartStore.getState().totalAmount()}
+        onConfirm={handlePaymentConfirm}
+        onCancel={handlePaymentCancel}
+        loading={checkout.isPending}
+      />
     </View>
   )
 }
