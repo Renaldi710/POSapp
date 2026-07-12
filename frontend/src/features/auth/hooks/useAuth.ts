@@ -24,5 +24,20 @@ export function useLogin() {
         router.replace('/(tabs)')
       }
     },
+    onError: (err) => {
+      // ponytail: backend belum punya endpoint auth — simulasi login untuk development
+      if (err.response?.status === 404) {
+        persistToken('dev-token')
+        useAuthStore.getState().setToken('dev-token')
+        useAuthStore.getState().setUser({
+          id: 1,
+          name: 'Admin POS',
+          email: 'admin@pos.app',
+          role: 'admin',
+          created_at: new Date().toISOString(),
+        })
+        router.replace('/(tabs)/dashboard')
+      }
+    },
   })
 }

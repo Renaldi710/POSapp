@@ -25,7 +25,7 @@ export default function LoginScreen() {
     mutate({ email, password, device_name: 'mobile-app' })
   }
 
-  const apiError = error?.response?.data?.message
+  const apiError = (error?.response?.data as { detail?: string })?.detail || error?.response?.data?.message
 
   return (
     <KeyboardAvoidingView
