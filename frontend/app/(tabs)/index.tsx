@@ -17,7 +17,7 @@ export default function KasirScreen() {
   const checkout = useCheckout()
 
   const handleAdd = useCallback(
-    (product: Product) => addItem(product.id, product.name, Number(product.price)),
+    (product: Product) => addItem(product.id, product.name, product.price),
     [addItem],
   )
 
