@@ -35,3 +35,9 @@ Thumbs.db
 /backend/vendor/
 /backend/.idea/
 /backend/env
+/backend/.venv/
+/backend/__pycache__/
+/backend/api/__pycache__/
+/backend/*.sqlite
+/backend/*.sqlite3
+/backend/database.sqlite
