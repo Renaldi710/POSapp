@@ -51,5 +51,6 @@ app.include_router(transactions.router)
 
 
 @app.get("/api/health")
+@app.get("/health")
 async def health():
     return {"status": "ok"}
