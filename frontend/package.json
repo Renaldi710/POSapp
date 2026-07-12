@@ -5,6 +5,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
+    "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.4",
     "expo-camera": "~57.0.1",
     "expo-constants": "~57.0.3",
@@ -39,7 +40,9 @@
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": ["react-native-thermal-receipt-printer"]
+        "exclude": [
+          "react-native-thermal-receipt-printer"
+        ]
       }
     }
   }
