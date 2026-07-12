@@ -104,11 +104,11 @@
 **Owner:** Renaldi
 
 ### Tasks
-- [ ] Configure Vercel Env Vars for production (Neon connection string, `APP_ENV=production`, `DEBUG=False`)
+- [x] Configure Vercel Env Vars for production (Neon connection string, `APP_ENV=production`, `DEBUG=False`)
 - [ ] Verify Neon Postgres (Singapore region) connects via `asyncpg` in production
 - [ ] Confirm auto-deploy triggers correctly from GitHub → Vercel on merge to `main`
-- [ ] Add basic health check endpoint (`/health`) for uptime verification
-- [ ] Document cold-start behavior and expected latency on serverless/free tier
+- [x] Add basic health check endpoint (`/health`) for uptime verification
+- [x] Document cold-start behavior and expected latency on serverless/free tier
 
 ### Deliverables
 - ✅ Production deploy live on Vercel, connected to Neon
@@ -116,7 +116,7 @@
 - ✅ Cold-start latency documented as known limitation (not treated as a bug)
 
 ### PR Checklist
-- [ ] No secrets committed; all prod config via Vercel Env Vars
-- [ ] `DEBUG=False` confirmed in production config
-- [ ] Health check endpoint verified live after deploy
-- [ ] Rollback path (revert to previous Vercel deployment) tested once
+- [x] No secrets committed; all prod config via Vercel Env Vars
+- [x] `DEBUG=False` confirmed in production config
+- [x] Health check endpoint verified live after deploy
+- [x] Rollback path (revert to previous Vercel deployment) tested once

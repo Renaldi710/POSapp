@@ -1,54 +1,64 @@
 # POSapp Backend
 
-FastAPI backend untuk app POS internal/native. Deploy target: **Vercel + Supabase PostgreSQL direct connection**.
+FastAPI backend untuk POS UMKM. Deploy target: **Vercel + Neon PostgreSQL**.
 
 ## Stack
 - Python 3.11+
-- FastAPI
-- Async SQLAlchemy + asyncpg
-- Alembic migrations
-- Supabase PostgreSQL
+- FastAPI + uvicorn
+- Async SQLAlchemy 2.0 + asyncpg
+- aiosqlite (local dev)
+- pydantic-settings
 
-## Setup
+## Local Setup
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# edit .env -> isi DATABASE_URL
-alembic upgrade head
-uvicorn api.index:app --reload
+cp .env.example .env.local
+uvicorn app.main:app --reload
+# → http://localhost:8000/docs
 ```
+
+SQLite auto-created — zero external deps needed.
 
 ## Environment Variables
-Copy `.env.example` ke `.env`, lalu isi:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | Supabase direct connection (`postgresql+asyncpg://...:5432/...`) |
-| `CORS_ORIGINS` | No | Comma-separated origins (default: `*`) |
-| `APP_ENV` | No | `local` or `production` |
-| `APP_DEBUG` | No | `true` or `false` |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `APP_ENV` | No | `development` | `development`/`local` → SQLite, `production` → Neon |
+| `DATABASE_URL` | Prod only | — | Neon Direct Connection (`postgresql+asyncpg://...:5432/...`) |
+| `CORS_ORIGINS` | No | `*` | Comma-separated allowed origins |
+| `DEBUG` | No | `true` | Seeds admin user on startup when true |
 
-**Penting:** Gunakan port **5432** (Direct Connection), bukan 6543 (Transaction Pooler).
+Auto-detection: `APP_ENV=development` → SQLite, `APP_ENV=production` → requires `DATABASE_URL`.
 
-## Commands
+## Production (Vercel + Neon)
+
+### Required Vercel Env Vars
+```
+APP_ENV=production
+DATABASE_URL=postgresql+asyncpg://postgres:<password>@db.<ref>.neon.tech:5432/postgres
+CORS_ORIGINS=https://your-frontend.vercel.app
+```
+
+**Gunakan port 5432** (Direct Connection), bukan 6543 (pooler). Config akan reject port 6543.
+
+### Auto-deploy
+Merge ke `main` → GitHub Actions trigger → Vercel auto-deploys.
+
+### Cold-start note
+Vercel free/Hobby tier cold-starts take **~5–10s** on first request after idle. This is normal — subsequent requests are fast. Consider:
+- Use Pro plan for zero-cold-start if latency-sensitive
+- Set up a monitoring ping (e.g. UptimeRobot) every 5 min to keep warm
+
+### Rollback
+Vercel Dashboard → Deployments → ⋮ → Promote to Production (previous deployment).
+
+## Tests
 ```bash
-# syntax check
-python -m py_compile api/index.py
-
-# apply migrations
-alembic upgrade head
-```
-
-## Vercel
-Root directory: `backend`
-
-Required env vars:
-```
-DATABASE_URL=postgresql+asyncpg://...
-CORS_ORIGINS=https://your-app.vercel.app
+cd backend
+python -m pytest tests/ -v
 ```
 
 ## Contract

@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -17,11 +16,20 @@ class Settings(BaseSettings):
 
     @property
     def db_url(self) -> str:
-        if self.database_url:
-            return self.database_url
-        if self.is_debug:
-            return "sqlite+aiosqlite:///./database.sqlite"
-        raise RuntimeError("DATABASE_URL required in production")
+        url = self.database_url
+        if not url:
+            if self.is_debug:
+                return "sqlite+aiosqlite:///./database.sqlite"
+            raise RuntimeError("DATABASE_URL is required in production")
+        if ":6543" in url:
+            raise RuntimeError(
+                "Use Neon Direct Connection (port 5432), not connection pooler (6543)"
+            )
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
 
     @property
     def cors_list(self) -> list[str]:
