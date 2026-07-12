@@ -86,6 +86,7 @@ export default function KasirScreen() {
         onConfirm={handlePaymentConfirm}
         onCancel={handlePaymentCancel}
         loading={checkout.isPending}
+        errorMessage={checkout.errorMessage}
       />
     </View>
   )
