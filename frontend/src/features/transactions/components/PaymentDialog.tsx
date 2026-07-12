@@ -8,6 +8,7 @@ interface PaymentDialogProps {
   onConfirm: (data: { metode: string; uangDiterima: number; cetakStruk: boolean }) => void
   onCancel: () => void
   loading?: boolean
+  errorMessage?: string | null
 }
 
 const METODE = [
@@ -16,7 +17,7 @@ const METODE = [
   { key: 'kartu', label: 'Kartu' },
 ] as const
 
-export default function PaymentDialog({ visible, totalAmount, onConfirm, onCancel, loading }: PaymentDialogProps) {
+export default function PaymentDialog({ visible, totalAmount, onConfirm, onCancel, loading, errorMessage }: PaymentDialogProps) {
   const [metode, setMetode] = useState('tunai')
   const [uangDiterima, setUangDiterima] = useState('')
   const [cetakStruk, setCetakStruk] = useState(true)
@@ -83,6 +84,12 @@ export default function PaymentDialog({ visible, totalAmount, onConfirm, onCance
             <Text className="text-sm font-medium text-gray-700">Cetak Struk</Text>
             <Switch value={cetakStruk} onValueChange={setCetakStruk} />
           </View>
+
+          {errorMessage ? (
+            <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+              <Text className="text-red-700 text-sm text-center">{errorMessage}</Text>
+            </View>
+          ) : null}
 
           <View className="flex-row gap-3">
             <TouchableOpacity className="flex-1 py-3 rounded-lg border border-gray-300" onPress={handleClose} disabled={loading}>
