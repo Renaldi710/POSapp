@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import User, Category  # noqa: F401 — ensure models registered
+from app.routers import products
 
 
 def hash_password(password: str):
@@ -43,6 +44,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(products.router)
 
 
 @app.get("/api/health")
