@@ -1,17 +1,18 @@
-# POS API — Contract
+# POS API Contract
 
-Base URL: `http://localhost:8000/api`  
-Format: `application/json`
-
----
+Base URL local: `http://localhost:8000/api`  
+Base URL Vercel: `https://<project>.vercel.app/api`  
+Format: JSON
 
 ## Auth
 
 ### Login
-```
+```http
 POST /api/tokens/create
 Content-Type: application/json
+```
 
+```json
 {
   "email": "admin@pos.app",
   "password": "password",
@@ -19,123 +20,88 @@ Content-Type: application/json
 }
 ```
 
-**Response 200:**
+Response `200`:
 ```json
-{ "token": "1|abc123..." }
+{ "token": "abc123" }
 ```
 
-**Response 401:**
+Response `401`:
 ```json
-{ "message": "Invalid credentials" }
+{ "detail": "Invalid credentials" }
 ```
-
----
 
 ## Health
 
-```
+```http
 GET /api/health
 ```
 
-**Response 200:**
+Response `200`:
 ```json
 { "status": "ok" }
 ```
 
----
-
 ## Authenticated Requests
 
-Every request below requires:
-```
+All endpoints below require:
+```http
 Authorization: Bearer <token>
-Accept: application/json
 ```
 
-Unauthenticated requests return `401`:
+Unauthenticated response:
 ```json
-{ "message": "Unauthenticated." }
+{ "detail": "Unauthenticated" }
 ```
-
----
 
 ## User
 
-### Get Current User
-```
+```http
 GET /api/user
 ```
 
-**Response 200:**
+Response:
 ```json
 {
   "id": 1,
   "name": "Admin POS",
   "email": "admin@pos.app",
   "role": "admin",
-  "created_at": "2026-07-06T09:19:25.000000Z"
+  "created_at": "2026-07-06T09:19:25"
 }
 ```
 
----
-
 ## Categories
 
-### List Categories
-```
+```http
 GET /api/categories
-```
-
-**Response 200:**
-```json
-[
-  { "id": 1, "name": "Makanan", "products_count": 0 },
-  { "id": 2, "name": "Minuman", "products_count": 0 }
-]
-```
-
-### Create Category
-```
 POST /api/categories
-Content-Type: application/json
+GET /api/categories/{id}
+PUT /api/categories/{id}
+DELETE /api/categories/{id}
+```
 
+Create/update body:
+```json
 { "name": "Minuman" }
 ```
 
-**Response 201:** Returns created category  
-**Response 422:** Validation error
+List response item:
 ```json
-{ "message": "The name field is required.", "errors": { "name": ["..."] } }
+{ "id": 1, "name": "Minuman", "products_count": 0 }
 ```
-
----
 
 ## Products
 
-### List Products
-```
+```http
 GET /api/products
-```
-
-**Response 200:**
-```json
-[
-  {
-    "id": 1,
-    "category_id": 1,
-    "name": "Es Teh",
-    "price": "5000.00",
-    "stock": 100,
-    "category": { "id": 1, "name": "Minuman" }
-  }
-]
-```
-
-### Create Product
-```
 POST /api/products
-Content-Type: application/json
+GET /api/products/{id}
+PUT /api/products/{id}
+DELETE /api/products/{id}
+```
 
+Create body:
+```json
 {
   "category_id": 1,
   "name": "Es Teh",
@@ -144,71 +110,32 @@ Content-Type: application/json
 }
 ```
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `category_id` | integer | Yes | Must exist in categories |
-| `name` | string | Yes | Max 255 chars |
-| `price` | numeric | Yes | Min 0 |
-| `stock` | integer | Yes | Min 0 |
+Update body: any subset of `category_id`, `name`, `price`, `stock`.
 
-**Response 201:** Returns created product  
-**Response 422:** Validation error
-
-### Get Product
+Response item:
+```json
+{
+  "id": 1,
+  "category_id": 1,
+  "name": "Es Teh",
+  "price": 5000,
+  "stock": 100,
+  "category": { "id": 1, "name": "Minuman" }
+}
 ```
-GET /api/products/:id
-```
-
-**Response 200:** Product with category  
-**Response 404:** Not found
-
-### Update Product
-```
-PUT /api/products/:id
-Content-Type: application/json
-
-{ "price": 6000, "stock": 50 }
-```
-All fields optional. Only passed fields are updated.
-
-**Response 200:** Updated product  
-**Response 404:** Not found
-
-### Delete Product
-```
-DELETE /api/products/:id
-```
-
-**Response 204:** No content  
-**Response 404:** Not found
-
----
 
 ## Transactions
 
-### List Transactions
-```
+```http
 GET /api/transactions
-```
-
-**Response 200:**
-```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "total_amount": "12000.00",
-    "status": "completed",
-    "created_at": "2026-07-06T09:20:29.000000Z"
-  }
-]
-```
-
-### Create Transaction
-```
 POST /api/transactions
-Content-Type: application/json
+GET /api/transactions/{id}
+PUT /api/transactions/{id}
+DELETE /api/transactions/{id}
+```
 
+Create body:
+```json
 {
   "items": [
     { "product_id": 1, "quantity": 2 }
@@ -216,93 +143,63 @@ Content-Type: application/json
 }
 ```
 
-**Behavior:**
-- Stock decremented automatically
-- `total_amount` = sum of (`price` × `quantity`)
-- `status` always `"completed"`
+Create behavior:
+- checks stock
+- decrements stock atomically
+- saves sale-time `price` and `subtotal`
+- sets `status` to `completed`
 
-**Response 201:**
+Create response:
 ```json
 {
   "id": 1,
   "user_id": 1,
-  "total_amount": 12000,
+  "total_amount": 10000,
   "status": "completed",
   "items": [
     {
       "id": 1,
       "product_id": 1,
       "quantity": 2,
-      "price": "6000.00",
-      "subtotal": "12000.00",
+      "price": 5000,
+      "subtotal": 10000,
       "product": { "id": 1, "name": "Es Teh" }
     }
   ]
 }
 ```
 
-**Response 422:** Insufficient stock or invalid product_id
-
-### Get Transaction
-```
-GET /api/transactions/:id
-```
-
-**Response 200:** Full transaction with items, product detail, and user  
-**Response 404:** Not found
-
----
-
 ## Reports
 
-### Daily Report
-```
+```http
 GET /api/reports/daily?date=2026-07-06
 ```
-`date` param optional. Defaults to today.
 
-**Response 200:**
+`date` optional; defaults to today.
+
+Response:
 ```json
 {
   "date": "2026-07-06",
   "total_transactions": 1,
-  "total_revenue": 12000,
+  "total_revenue": 10000,
   "total_items_sold": 2,
   "top_products": [
     {
       "product_id": 1,
       "total_qty": 2,
-      "total": "12000.00",
+      "total": 10000,
       "product": { "id": 1, "name": "Es Teh" }
     }
   ]
 }
 ```
 
----
+## Status Codes
 
-## HTTP Status Codes
-
-| Code | Meaning |
-|------|---------|
-| 200 | OK |
-| 201 | Created |
-| 204 | No Content (delete success) |
-| 401 | Unauthenticated |
-| 404 | Not Found |
-| 422 | Validation Error |
-| 500 | Server Error |
-
----
-
-## Validation Errors (422)
-
-```json
-{
-  "message": "The category id field is required.",
-  "errors": {
-    "category_id": ["The category id field is required."],
-    "name": ["The name field is required."]
-  }
-}
-```
+- `200` OK
+- `201` Created
+- `204` Deleted
+- `401` Unauthenticated / invalid login
+- `404` Not found
+- `422` Validation or insufficient stock
