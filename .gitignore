@@ -41,7 +41,6 @@ Thumbs.db
 /backend/*.sqlite
 /backend/*.sqlite3
 /backend/database.sqlite
-/backend/alembic/versions/*.pyc
 /backend/.env
 /backend/.env.local
 /backend/.env.*.local
