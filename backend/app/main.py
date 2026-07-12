@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import User, Category  # noqa: F401 — ensure models registered
-from app.routers import products
+from app.routers import products, transactions
 
 
 def hash_password(password: str):
@@ -47,6 +47,7 @@ app.add_middleware(
 
 
 app.include_router(products.router)
+app.include_router(transactions.router)
 
 
 @app.get("/api/health")
