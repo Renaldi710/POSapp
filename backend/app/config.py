@@ -1,22 +1,31 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from pathlib import Path
 
-load_dotenv()
 
-APP_ENV = os.getenv("APP_ENV", "development")
-DEBUG = APP_ENV in ("development", "local")
+class Settings(BaseSettings):
+    app_name: str = "POSapp"
+    app_env: str = "development"
+    debug: bool = True
+    cors_origins: str = "*"
+    database_url: str | None = None
 
-if DEBUG:
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./database.sqlite")
-else:
-    DATABASE_URL = os.getenv("DATABASE_URL", "")
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL is required in production")
-    if ":6543" in DATABASE_URL:
-        raise RuntimeError("Use Supabase Direct Connection port 5432, not Transaction Pooler 6543")
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-    elif DATABASE_URL.startswith("postgresql://"):
-        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    model_config = {"env_file": ".env.local", "env_file_encoding": "utf-8", "extra": "ignore"}
 
-CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+    @property
+    def is_debug(self) -> bool:
+        return self.app_env in ("development", "local")
+
+    @property
+    def db_url(self) -> str:
+        if self.database_url:
+            return self.database_url
+        if self.is_debug:
+            return "sqlite+aiosqlite:///./database.sqlite"
+        raise RuntimeError("DATABASE_URL required in production")
+
+    @property
+    def cors_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+
+settings = Settings()
