@@ -7,7 +7,9 @@ interface CartBarProps {
 }
 
 export default function CartBar({ onCheckout }: CartBarProps) {
-  const { items, totalAmount, itemCount } = useCartStore()
+  const items = useCartStore((s) => s.items)
+  const totalAmount = useCartStore((s) => s.totalAmount)
+  const itemCount = useCartStore((s) => s.itemCount)
   if (items.length === 0) return null
 
   return (
