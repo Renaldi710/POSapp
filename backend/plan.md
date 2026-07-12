@@ -79,11 +79,11 @@
 **Owner:** Renaldi
 
 ### Tasks
-- [ ] Build checkout endpoint: create transaction + transaction_items in one request
-- [ ] Wrap stock deduction + transaction creation inside `async with db.begin():`
-- [ ] Snapshot `price_at_moment` from current product price at time of sale
-- [ ] Guard: validate `stock >= qty` before committing deduction; rollback on failure
-- [ ] Build paginated transaction history endpoint (filter by date/cashier)
+- [x] Build checkout endpoint: create transaction + transaction_items in one request
+- [x] Wrap stock deduction + transaction creation inside `async with db.begin():`
+- [x] Snapshot `price_at_moment` from current product price at time of sale
+- [x] Guard: validate `stock >= qty` before committing deduction; rollback on failure
+- [x] Build paginated transaction history endpoint (filter by date/cashier)
 
 ### Deliverables
 - ✅ Checkout is atomic — partial failures roll back completely, no orphaned stock changes
@@ -91,10 +91,10 @@
 - ✅ Transaction history paginated and filterable
 
 ### PR Checklist
-- [ ] Entire checkout flow runs inside a single `async with db.begin():` block
-- [ ] Stock guard tested with insufficient-stock scenario (expects rollback, no partial write)
-- [ ] `price_at_moment` verified independent from current product price
-- [ ] No `httpx`/sync calls blocking the event loop during checkout
+- [x] Entire checkout flow runs inside a single `async with db.begin():` block
+- [x] Stock guard tested with insufficient-stock scenario (expects rollback, no partial write)
+- [x] `price_at_moment` verified independent from current product price
+- [x] No `httpx`/sync calls blocking the event loop during checkout
 
 ---
 
