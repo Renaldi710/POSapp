@@ -32,7 +32,7 @@ export default function ScanScreen() {
       const res = await client.get<Product[]>(ENDPOINTS.PRODUCTS.LIST, { params: { search: data } })
       const product = res.data[0]
       if (product) {
-        addItem(product.id, product.name, Number(product.price))
+        addItem(product.id, product.name, product.price)
         router.back()
       } else {
         setError(`Produk dengan kode "${data}" tidak ditemukan`)
