@@ -2,116 +2,138 @@ from datetime import date, datetime
 import hashlib
 import os
 import secrets
-import sqlite3
-from typing import Annotated, Any
+from enum import StrEnum
+from typing import Annotated
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlalchemy import DateTime, ForeignKey, String, delete, func, select, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, selectinload
 
-DB_PATH = os.getenv("DATABASE_PATH", os.path.join(os.path.dirname(__file__), "..", "database.sqlite"))
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required")
+if ":6543" in DATABASE_URL:
+    raise RuntimeError("Use Supabase Direct Connection port 5432, not Transaction Pooler 6543")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+engine = create_async_engine(DATABASE_URL, pool_size=5, max_overflow=10, pool_recycle=300, pool_pre_ping=True)
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
 app = FastAPI(title="POSapp API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[origin for origin in os.getenv("CORS_ORIGINS", "*").split(",") if origin],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-def db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+class Base(DeclarativeBase):
+    pass
 
 
-def now():
-    return datetime.utcnow().isoformat(timespec="seconds")
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(50), default="kasir")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    tokens: Mapped[list["Token"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    transactions: Mapped[list["Transaction"]] = relationship(back_populates="user")
 
 
-def hash_password(password: str):
-    return hashlib.sha256(password.encode()).hexdigest()
+class Token(Base):
+    __tablename__ = "tokens"
+
+    token: Mapped[str] = mapped_column(String(255), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    device_name: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="tokens")
 
 
-def row_dict(row):
-    return dict(row) if row else None
+class Category(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    products: Mapped[list["Product"]] = relationship(back_populates="category", cascade="all, delete-orphan")
 
 
-def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    with db() as conn:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'kasir',
-                created_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS tokens (
-                token TEXT PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                device_name TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS products (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-                name TEXT NOT NULL,
-                price REAL NOT NULL CHECK(price >= 0),
-                stock INTEGER NOT NULL DEFAULT 0 CHECK(stock >= 0),
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                total_amount REAL NOT NULL,
-                status TEXT NOT NULL DEFAULT 'completed',
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS transaction_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                transaction_id INTEGER NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
-                product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-                quantity INTEGER NOT NULL CHECK(quantity > 0),
-                price REAL NOT NULL,
-                subtotal REAL NOT NULL,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-            """
-        )
-        if not conn.execute("SELECT 1 FROM users WHERE email = ?", ("admin@pos.app",)).fetchone():
-            t = now()
-            conn.execute(
-                "INSERT INTO users (name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?)",
-                ("Admin POS", "admin@pos.app", hash_password("password"), "admin", t),
-            )
-            for name in ["Makanan", "Minuman", "Snack", "Lainnya"]:
-                conn.execute("INSERT INTO categories (name, created_at, updated_at) VALUES (?, ?, ?)", (name, t, t))
+class Product(Base):
+    __tablename__ = "products"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    price: Mapped[float]
+    stock: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    category: Mapped[Category] = relationship(back_populates="products")
+    items: Mapped[list["TransactionItem"]] = relationship(back_populates="product")
 
 
-@app.on_event("startup")
-def startup():
-    init_db()
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    total_amount: Mapped[float]
+    status: Mapped[str] = mapped_column(String(50), default="completed")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="transactions")
+    items: Mapped[list["TransactionItem"]] = relationship(back_populates="transaction", cascade="all, delete-orphan")
+
+
+class TransactionItem(Base):
+    __tablename__ = "transaction_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    transaction_id: Mapped[int] = mapped_column(ForeignKey("transactions.id", ondelete="CASCADE"), index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), index=True)
+    quantity: Mapped[int]
+    price: Mapped[float]
+    subtotal: Mapped[float]
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    transaction: Mapped[Transaction] = relationship(back_populates="items")
+    product: Mapped[Product] = relationship(back_populates="items")
+
+
+class TransactionStatus(StrEnum):
+    pending = "pending"
+    completed = "completed"
+    cancelled = "cancelled"
 
 
 class LoginIn(BaseModel):
-    email: str
-    password: str
-    device_name: str
+    email: str = Field(min_length=3, max_length=255)
+    password: str = Field(min_length=1)
+    device_name: str = Field(min_length=1, max_length=100)
 
 
 class CategoryIn(BaseModel):
@@ -119,21 +141,21 @@ class CategoryIn(BaseModel):
 
 
 class ProductIn(BaseModel):
-    category_id: int
+    category_id: int = Field(gt=0)
     name: str = Field(min_length=1, max_length=255)
     price: float = Field(ge=0)
     stock: int = Field(ge=0)
 
 
 class ProductPatch(BaseModel):
-    category_id: int | None = None
+    category_id: int | None = Field(default=None, gt=0)
     name: str | None = Field(default=None, min_length=1, max_length=255)
     price: float | None = Field(default=None, ge=0)
     stock: int | None = Field(default=None, ge=0)
 
 
 class TransactionItemIn(BaseModel):
-    product_id: int
+    product_id: int = Field(gt=0)
     quantity: int = Field(gt=0)
 
 
@@ -142,269 +164,300 @@ class TransactionIn(BaseModel):
 
 
 class TransactionPatch(BaseModel):
-    status: str = Field(pattern="^(pending|completed|cancelled)$")
+    status: TransactionStatus
 
 
-def current_user(authorization: Annotated[str | None, Header()] = None):
+async def get_db():
+    async with SessionLocal() as session:
+        yield session
+
+
+def hash_password(password: str):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+def user_out(user: User):
+    return {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "created_at": user.created_at.isoformat()}
+
+
+def category_out(category: Category):
+    return {
+        "id": category.id,
+        "name": category.name,
+        "created_at": category.created_at.isoformat(),
+        "updated_at": category.updated_at.isoformat(),
+        "products_count": len(category.products),
+    }
+
+
+def product_out(product: Product):
+    return {
+        "id": product.id,
+        "category_id": product.category_id,
+        "name": product.name,
+        "price": product.price,
+        "stock": product.stock,
+        "created_at": product.created_at.isoformat(),
+        "updated_at": product.updated_at.isoformat(),
+        "category": {"id": product.category.id, "name": product.category.name},
+    }
+
+
+def transaction_out(transaction: Transaction):
+    return {
+        "id": transaction.id,
+        "user_id": transaction.user_id,
+        "total_amount": transaction.total_amount,
+        "status": transaction.status,
+        "created_at": transaction.created_at.isoformat(),
+        "updated_at": transaction.updated_at.isoformat(),
+        "user": user_out(transaction.user),
+        "items": [
+            {
+                "id": item.id,
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "price": item.price,
+                "subtotal": item.subtotal,
+                "created_at": item.created_at.isoformat(),
+                "updated_at": item.updated_at.isoformat(),
+                "product": {"id": item.product.id, "name": item.product.name},
+            }
+            for item in transaction.items
+        ],
+    }
+
+
+async def current_user(authorization: Annotated[str | None, Header()] = None, db: AsyncSession = Depends(get_db)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthenticated")
     token = authorization.removeprefix("Bearer ").strip()
-    with db() as conn:
-        row = conn.execute(
-            "SELECT users.id, users.name, users.email, users.role, users.created_at FROM tokens JOIN users ON users.id = tokens.user_id WHERE tokens.token = ?",
-            (token,),
-        ).fetchone()
-    if not row:
+    result = await db.execute(select(Token).options(selectinload(Token.user)).where(Token.token == token))
+    token_row = result.scalar_one_or_none()
+    if not token_row:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unauthenticated")
-    return row_dict(row)
-
-
-def require_category(conn, category_id: int):
-    if not conn.execute("SELECT 1 FROM categories WHERE id = ?", (category_id,)).fetchone():
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "category_id not found")
-
-
-def category_out(conn, category_id: int):
-    row = conn.execute(
-        "SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) products_count FROM categories c WHERE c.id = ?",
-        (category_id,),
-    ).fetchone()
-    if not row:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-    return row_dict(row)
-
-
-def product_out(conn, product_id: int):
-    row = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
-    if not row:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-    product = row_dict(row)
-    product["category"] = row_dict(conn.execute("SELECT id, name FROM categories WHERE id = ?", (product["category_id"],)).fetchone())
-    return product
-
-
-def transaction_out(conn, transaction_id: int):
-    row = conn.execute("SELECT * FROM transactions WHERE id = ?", (transaction_id,)).fetchone()
-    if not row:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-    trx = row_dict(row)
-    trx["user"] = row_dict(conn.execute("SELECT id, name, email, role FROM users WHERE id = ?", (trx["user_id"],)).fetchone())
-    items = conn.execute("SELECT * FROM transaction_items WHERE transaction_id = ?", (transaction_id,)).fetchall()
-    trx["items"] = []
-    for item in items:
-        item_data = row_dict(item)
-        item_data["product"] = row_dict(conn.execute("SELECT id, name FROM products WHERE id = ?", (item_data["product_id"],)).fetchone())
-        trx["items"].append(item_data)
-    return trx
+    return token_row.user
 
 
 @app.get("/api/health")
-def health():
+async def health():
     return {"status": "ok"}
 
 
 @app.post("/api/tokens/create")
-def login(body: LoginIn):
-    init_db()
-    with db() as conn:
-        user = conn.execute("SELECT * FROM users WHERE email = ?", (body.email,)).fetchone()
-        if not user or user["password_hash"] != hash_password(body.password):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
-        token = secrets.token_urlsafe(32)
-        conn.execute("INSERT INTO tokens (token, user_id, device_name, created_at) VALUES (?, ?, ?, ?)", (token, user["id"], body.device_name, now()))
-        return {"token": token}
+async def login(body: LoginIn, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.email == body.email))
+    user = result.scalar_one_or_none()
+    if not user or user.password_hash != hash_password(body.password):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
+    token = Token(token=secrets.token_urlsafe(32), user_id=user.id, device_name=body.device_name)
+    db.add(token)
+    await db.commit()
+    return {"token": token.token}
 
 
 @app.get("/api/user")
-def me(user: Annotated[dict[str, Any], Depends(current_user)]):
-    return user
+async def me(user: User = Depends(current_user)):
+    return user_out(user)
 
 
 @app.get("/api/categories")
-def list_categories(_: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        rows = conn.execute("SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) products_count FROM categories c ORDER BY c.id").fetchall()
-        return [row_dict(row) for row in rows]
+async def list_categories(_: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Category).options(selectinload(Category.products)).order_by(Category.id))
+    return [category_out(category) for category in result.scalars().all()]
 
 
 @app.post("/api/categories", status_code=201)
-def create_category(body: CategoryIn, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        t = now()
-        cur = conn.execute("INSERT INTO categories (name, created_at, updated_at) VALUES (?, ?, ?)", (body.name, t, t))
-        return category_out(conn, cur.lastrowid)
+async def create_category(body: CategoryIn, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    category = Category(name=body.name, updated_at=datetime.utcnow())
+    db.add(category)
+    await db.commit()
+    await db.refresh(category, ["products"])
+    return category_out(category)
 
 
 @app.get("/api/categories/{category_id}")
-def get_category(category_id: int, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        return category_out(conn, category_id)
+async def get_category(category_id: int, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Category).options(selectinload(Category.products)).where(Category.id == category_id))
+    category = result.scalar_one_or_none()
+    if not category:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    return category_out(category)
 
 
 @app.put("/api/categories/{category_id}")
-def update_category(category_id: int, body: CategoryIn, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        if not conn.execute("SELECT 1 FROM categories WHERE id = ?", (category_id,)).fetchone():
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-        conn.execute("UPDATE categories SET name = ?, updated_at = ? WHERE id = ?", (body.name, now(), category_id))
-        return category_out(conn, category_id)
+async def update_category(category_id: int, body: CategoryIn, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Category).options(selectinload(Category.products)).where(Category.id == category_id))
+    category = result.scalar_one_or_none()
+    if not category:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    category.name = body.name
+    category.updated_at = datetime.utcnow()
+    await db.commit()
+    return category_out(category)
 
 
 @app.delete("/api/categories/{category_id}", status_code=204)
-def delete_category(category_id: int, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        cur = conn.execute("DELETE FROM categories WHERE id = ?", (category_id,))
-        if cur.rowcount == 0:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+async def delete_category(category_id: int, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(delete(Category).where(Category.id == category_id))
+    if result.rowcount == 0:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    await db.commit()
     return Response(status_code=204)
 
 
 @app.get("/api/products")
-def list_products(_: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        rows = conn.execute("SELECT id FROM products ORDER BY id").fetchall()
-        return [product_out(conn, row["id"]) for row in rows]
+async def list_products(_: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product).options(selectinload(Product.category)).order_by(Product.id))
+    return [product_out(product) for product in result.scalars().all()]
 
 
 @app.post("/api/products", status_code=201)
-def create_product(body: ProductIn, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        require_category(conn, body.category_id)
-        t = now()
-        cur = conn.execute(
-            "INSERT INTO products (category_id, name, price, stock, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (body.category_id, body.name, body.price, body.stock, t, t),
-        )
-        return product_out(conn, cur.lastrowid)
+async def create_product(body: ProductIn, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    category = await db.get(Category, body.category_id)
+    if not category:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "category_id not found")
+    product = Product(category_id=body.category_id, name=body.name, price=body.price, stock=body.stock, updated_at=datetime.utcnow())
+    db.add(product)
+    await db.commit()
+    result = await db.execute(select(Product).options(selectinload(Product.category)).where(Product.id == product.id))
+    return product_out(result.scalar_one())
 
 
 @app.get("/api/products/{product_id}")
-def get_product(product_id: int, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        return product_out(conn, product_id)
+async def get_product(product_id: int, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Product).options(selectinload(Product.category)).where(Product.id == product_id))
+    product = result.scalar_one_or_none()
+    if not product:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    return product_out(product)
 
 
 @app.put("/api/products/{product_id}")
-def update_product(product_id: int, body: ProductPatch, _: Annotated[dict[str, Any], Depends(current_user)]):
+async def update_product(product_id: int, body: ProductPatch, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
     data = body.model_dump(exclude_none=True)
-    with db() as conn:
-        if not conn.execute("SELECT 1 FROM products WHERE id = ?", (product_id,)).fetchone():
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-        if "category_id" in data:
-            require_category(conn, data["category_id"])
-        if data:
-            fields = ", ".join(f"{key} = ?" for key in data)
-            conn.execute(f"UPDATE products SET {fields}, updated_at = ? WHERE id = ?", (*data.values(), now(), product_id))
-        return product_out(conn, product_id)
+    if "category_id" in data and not await db.get(Category, data["category_id"]):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "category_id not found")
+    result = await db.execute(update(Product).where(Product.id == product_id).values(**data, updated_at=datetime.utcnow()).returning(Product.id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    await db.commit()
+    result = await db.execute(select(Product).options(selectinload(Product.category)).where(Product.id == product_id))
+    return product_out(result.scalar_one())
 
 
 @app.delete("/api/products/{product_id}", status_code=204)
-def delete_product(product_id: int, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        cur = conn.execute("DELETE FROM products WHERE id = ?", (product_id,))
-        if cur.rowcount == 0:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+async def delete_product(product_id: int, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(delete(Product).where(Product.id == product_id))
+    if result.rowcount == 0:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    await db.commit()
     return Response(status_code=204)
 
 
 @app.get("/api/transactions")
-def list_transactions(_: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        rows = conn.execute("SELECT id FROM transactions ORDER BY id DESC").fetchall()
-        return [transaction_out(conn, row["id"]) for row in rows]
+async def list_transactions(_: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Transaction)
+        .options(selectinload(Transaction.items).selectinload(TransactionItem.product), selectinload(Transaction.user))
+        .order_by(Transaction.id.desc())
+    )
+    return [transaction_out(transaction) for transaction in result.scalars().all()]
 
 
 @app.post("/api/transactions", status_code=201)
-def create_transaction(body: TransactionIn, user: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        try:
-            conn.execute("BEGIN IMMEDIATE")
-            total = 0.0
-            items = []
-            for item in body.items:
-                product = conn.execute("SELECT * FROM products WHERE id = ?", (item.product_id,)).fetchone()
-                if not product:
-                    raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Invalid product_id {item.product_id}")
-                if product["stock"] < item.quantity:
-                    raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Insufficient stock for {product['name']}")
-                subtotal = float(product["price"]) * item.quantity
-                total += subtotal
-                items.append((product["id"], item.quantity, float(product["price"]), subtotal))
-            t = now()
-            cur = conn.execute(
-                "INSERT INTO transactions (user_id, total_amount, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-                (user["id"], total, "completed", t, t),
-            )
-            transaction_id = cur.lastrowid
-            for product_id, quantity, price, subtotal in items:
-                conn.execute("UPDATE products SET stock = stock - ?, updated_at = ? WHERE id = ?", (quantity, t, product_id))
-                conn.execute(
-                    "INSERT INTO transaction_items (transaction_id, product_id, quantity, price, subtotal, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (transaction_id, product_id, quantity, price, subtotal, t, t),
-                )
-            conn.commit()
-            return transaction_out(conn, transaction_id)
-        except Exception:
-            conn.rollback()
-            raise
+async def create_transaction(body: TransactionIn, user: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    try:
+        product_ids = [item.product_id for item in body.items]
+        result = await db.execute(select(Product).where(Product.id.in_(product_ids)).with_for_update())
+        products = {product.id: product for product in result.scalars().all()}
+        total = 0.0
+        transaction_items = []
+        for item in body.items:
+            product = products.get(item.product_id)
+            if not product:
+                raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Invalid product_id {item.product_id}")
+            if product.stock < item.quantity:
+                raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Insufficient stock for {product.name}")
+            subtotal = product.price * item.quantity
+            total += subtotal
+            product.stock -= item.quantity
+            product.updated_at = datetime.utcnow()
+            transaction_items.append(TransactionItem(product_id=product.id, quantity=item.quantity, price=product.price, subtotal=subtotal, updated_at=datetime.utcnow()))
+        transaction = Transaction(user_id=user.id, total_amount=total, status="completed", items=transaction_items, updated_at=datetime.utcnow())
+        db.add(transaction)
+        await db.commit()
+        result = await db.execute(
+            select(Transaction)
+            .options(selectinload(Transaction.items).selectinload(TransactionItem.product), selectinload(Transaction.user))
+            .where(Transaction.id == transaction.id)
+        )
+        return transaction_out(result.scalar_one())
+    except HTTPException:
+        await db.rollback()
+        raise
+    except (IntegrityError, SQLAlchemyError):
+        await db.rollback()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Database error")
 
 
 @app.get("/api/transactions/{transaction_id}")
-def get_transaction(transaction_id: int, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        return transaction_out(conn, transaction_id)
+async def get_transaction(transaction_id: int, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Transaction)
+        .options(selectinload(Transaction.items).selectinload(TransactionItem.product), selectinload(Transaction.user))
+        .where(Transaction.id == transaction_id)
+    )
+    transaction = result.scalar_one_or_none()
+    if not transaction:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    return transaction_out(transaction)
 
 
 @app.put("/api/transactions/{transaction_id}")
-def update_transaction(transaction_id: int, body: TransactionPatch, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        if not conn.execute("SELECT 1 FROM transactions WHERE id = ?", (transaction_id,)).fetchone():
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-        conn.execute("UPDATE transactions SET status = ?, updated_at = ? WHERE id = ?", (body.status, now(), transaction_id))
-        return transaction_out(conn, transaction_id)
+async def update_transaction(transaction_id: int, body: TransactionPatch, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(update(Transaction).where(Transaction.id == transaction_id).values(status=body.status.value, updated_at=datetime.utcnow()).returning(Transaction.id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    await db.commit()
+    return await get_transaction(transaction_id, _, db)
 
 
 @app.delete("/api/transactions/{transaction_id}", status_code=204)
-def delete_transaction(transaction_id: int, _: Annotated[dict[str, Any], Depends(current_user)]):
-    with db() as conn:
-        cur = conn.execute("DELETE FROM transactions WHERE id = ?", (transaction_id,))
-        if cur.rowcount == 0:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+async def delete_transaction(transaction_id: int, _: User = Depends(current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(delete(Transaction).where(Transaction.id == transaction_id))
+    if result.rowcount == 0:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+    await db.commit()
     return Response(status_code=204)
 
 
 @app.get("/api/reports/daily")
-def daily_report(_: Annotated[dict[str, Any], Depends(current_user)], selected_date: Annotated[date | None, Query(alias="date")] = None):
-    d = (selected_date or date.today()).isoformat()
-    with db() as conn:
-        summary = conn.execute(
-            "SELECT COUNT(*) total_transactions, COALESCE(SUM(total_amount), 0) total_revenue FROM transactions WHERE DATE(created_at) = ?",
-            (d,),
-        ).fetchone()
-        items_sold = conn.execute(
-            "SELECT COALESCE(SUM(ti.quantity), 0) total FROM transaction_items ti JOIN transactions t ON t.id = ti.transaction_id WHERE DATE(t.created_at) = ?",
-            (d,),
-        ).fetchone()["total"]
-        rows = conn.execute(
-            """
-            SELECT ti.product_id, SUM(ti.quantity) total_qty, SUM(ti.subtotal) total, p.name
-            FROM transaction_items ti
-            JOIN transactions t ON t.id = ti.transaction_id
-            JOIN products p ON p.id = ti.product_id
-            WHERE DATE(t.created_at) = ?
-            GROUP BY ti.product_id, p.name
-            ORDER BY total_qty DESC
-            LIMIT 5
-            """,
-            (d,),
-        ).fetchall()
-        return {
-            "date": d,
-            "total_transactions": summary["total_transactions"],
-            "total_revenue": summary["total_revenue"],
-            "total_items_sold": items_sold,
-            "top_products": [
-                {"product_id": row["product_id"], "total_qty": row["total_qty"], "total": row["total"], "product": {"id": row["product_id"], "name": row["name"]}}
-                for row in rows
-            ],
-        }
+async def daily_report(_: User = Depends(current_user), selected_date: Annotated[date | None, Query(alias="date")] = None, db: AsyncSession = Depends(get_db)):
+    d = selected_date or date.today()
+    summary = await db.execute(
+        select(func.count(Transaction.id), func.coalesce(func.sum(Transaction.total_amount), 0)).where(func.date(Transaction.created_at) == d)
+    )
+    total_transactions, total_revenue = summary.one()
+    items_sold = await db.execute(
+        select(func.coalesce(func.sum(TransactionItem.quantity), 0)).join(Transaction).where(func.date(Transaction.created_at) == d)
+    )
+    top = await db.execute(
+        select(TransactionItem.product_id, func.sum(TransactionItem.quantity), func.sum(TransactionItem.subtotal), Product.name)
+        .join(Transaction)
+        .join(Product)
+        .where(func.date(Transaction.created_at) == d)
+        .group_by(TransactionItem.product_id, Product.name)
+        .order_by(func.sum(TransactionItem.quantity).desc())
+        .limit(5)
+    )
+    return {
+        "date": d.isoformat(),
+        "total_transactions": total_transactions,
+        "total_revenue": float(total_revenue),
+        "total_items_sold": int(items_sold.scalar_one()),
+        "top_products": [
+            {"product_id": product_id, "total_qty": int(total_qty), "total": float(total), "product": {"id": product_id, "name": name}}
+            for product_id, total_qty, total, name in top.all()
+        ],
+    }
