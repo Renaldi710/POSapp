@@ -1,104 +1,55 @@
 # POSapp Backend
 
-REST API POS internal untuk mobile app. Backend ini pakai **Python FastAPI + SQLite**, bukan Laravel.
+FastAPI backend untuk app POS internal/native. Deploy target: **Vercel + Supabase PostgreSQL direct connection**.
 
 ## Stack
-
 - Python 3.11+
 - FastAPI
-- SQLite
-- Vercel Python serverless
+- Async SQLAlchemy + asyncpg
+- Alembic migrations
+- Supabase PostgreSQL
 
-## Setup Lokal
-
+## Setup
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env
+# edit .env -> isi DATABASE_URL
+alembic upgrade head
 uvicorn api.index:app --reload
 ```
 
-API lokal jalan di:
+## Environment Variables
+Copy `.env.example` ke `.env`, lalu isi:
 
-```text
-http://localhost:8000/api
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | Supabase direct connection (`postgresql+asyncpg://...:5432/...`) |
+| `CORS_ORIGINS` | No | Comma-separated origins (default: `*`) |
+| `APP_ENV` | No | `local` or `production` |
+| `APP_DEBUG` | No | `true` or `false` |
 
-## Environment
-
-Optional:
-
-```env
-DATABASE_PATH=./database.sqlite
-```
-
-Default DB lokal: `backend/database.sqlite`.
-
-Seed default dibuat otomatis kalau DB kosong:
-
-```text
-Email: admin@pos.app
-Password: password
-```
-
-## Deploy Vercel
-
-Root directory: `backend`
-
-Vercel butuh file:
-
-```text
-api/index.py
-requirements.txt
-vercel.json
-```
-
-Environment optional:
-
-```env
-DATABASE_PATH=/tmp/database.sqlite
-```
-
-Catatan: SQLite di Vercel serverless **tidak persistent**. Cocok buat dummy/internal demo, bukan data penting.
+**Penting:** Gunakan port **5432** (Direct Connection), bukan 6543 (Transaction Pooler).
 
 ## Commands
-
 ```bash
-# install deps
-pip install -r requirements.txt
-
-# dev server
-uvicorn api.index:app --reload
-
-# smoke check
+# syntax check
 python -m py_compile api/index.py
+
+# apply migrations
+alembic upgrade head
 ```
 
-## API
+## Vercel
+Root directory: `backend`
 
-Contract lengkap: [`API_CONTRACT.md`](./API_CONTRACT.md)
-
-Endpoint utama:
-
-| Method | Endpoint | Auth | Fungsi |
-|---|---|---|---|
-| GET | `/api/health` | No | Health check |
-| POST | `/api/tokens/create` | No | Login token |
-| GET | `/api/user` | Yes | Current user |
-| GET/POST | `/api/categories` | Yes | Category CRUD |
-| GET/POST | `/api/products` | Yes | Product CRUD |
-| GET/POST | `/api/transactions` | Yes | Transaction CRUD |
-| GET | `/api/reports/daily` | Yes | Daily report |
-
-Auth pakai header:
-
-```http
-Authorization: Bearer <token>
+Required env vars:
+```
+DATABASE_URL=postgresql+asyncpg://...
+CORS_ORIGINS=https://your-app.vercel.app
 ```
 
-## POS Rules
-
-- Checkout wajib atomik: cek stok, kurangi stok, simpan transaction/items dalam satu DB transaction.
-- Simpan `price` saat transaksi; report jangan pakai harga produk terbaru.
-- Keep simple: stdlib `sqlite3`, tanpa SQLAlchemy/Alembic sampai benar-benar perlu.
+## Contract
+[`API_CONTRACT.md`](./API_CONTRACT.md)
