@@ -9,7 +9,6 @@ import type { AxiosError } from 'axios'
 
 export function useLogin() {
   const router = useRouter()
-  const { setUser } = useAuthStore()
 
   return useMutation<LoginResponse, AxiosError<{ message: string }>, LoginPayload>({
     mutationFn: (payload) =>
@@ -17,7 +16,7 @@ export function useLogin() {
     onSuccess: async (data) => {
       await setToken(data.token)
       const userRes = await client.get('/api/user')
-      setUser(userRes.data)
+      useAuthStore.getState().setUser(userRes.data)
       if (userRes.data.role === 'admin') {
         router.replace('/(tabs)/dashboard')
       } else {
