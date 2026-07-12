@@ -1,9 +1,12 @@
 # POSapp Backend
 
-FastAPI backend untuk POS UMKM. Deploy target: **Vercel + Neon PostgreSQL**.
+FastAPI backend untuk POS UMKM. Deployed on **Vercel + Neon PostgreSQL**.
+
+Production URL: https://backend-gold-sigma-21.vercel.app
+Swagger docs: https://backend-gold-sigma-21.vercel.app/docs
 
 ## Stack
-- Python 3.11+
+- Python 3.12+
 - FastAPI + uvicorn
 - Async SQLAlchemy 2.0 + asyncpg
 - aiosqlite (local dev)
@@ -20,7 +23,7 @@ uvicorn app.main:app --reload
 # → http://localhost:8000/docs
 ```
 
-SQLite auto-created — zero external deps needed.
+SQLite auto-created — zero external deps needed. Seed data (admin user + categories) otomatis saat `APP_ENV=local`.
 
 ## Environment Variables
 
@@ -31,29 +34,33 @@ SQLite auto-created — zero external deps needed.
 | `CORS_ORIGINS` | No | `*` | Comma-separated allowed origins |
 | `DEBUG` | No | `true` | Seeds admin user on startup when true |
 
-Auto-detection: `APP_ENV=development` → SQLite, `APP_ENV=production` → requires `DATABASE_URL`.
-
 ## Production (Vercel + Neon)
 
 ### Required Vercel Env Vars
 ```
 APP_ENV=production
-DATABASE_URL=postgresql+asyncpg://postgres:<password>@db.<ref>.neon.tech:5432/postgres
+DATABASE_URL=postgresql://neondb_owner:...@ep-xxx-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 CORS_ORIGINS=https://your-frontend.vercel.app
 ```
 
-**Gunakan port 5432** (Direct Connection), bukan 6543 (pooler). Config akan reject port 6543.
+Config otomatis:
+- convert `postgresql://` → `postgresql+asyncpg://`
+- strip parameter `sslmode` & `channel_binding` (libpq-only, asyncpg reject)
+- reject port `6543` (gunakan direct connection port `5432`)
 
 ### Auto-deploy
-Merge ke `main` → GitHub Actions trigger → Vercel auto-deploys.
+Push/merge ke `main` → Vercel auto-deploys.
 
 ### Cold-start note
-Vercel free/Hobby tier cold-starts take **~5–10s** on first request after idle. This is normal — subsequent requests are fast. Consider:
-- Use Pro plan for zero-cold-start if latency-sensitive
-- Set up a monitoring ping (e.g. UptimeRobot) every 5 min to keep warm
+Vercel free/Hobby tier cold-starts ~5–10s. Set monitoring ping tiap 5 menit (UptimeRobot) untuk keep warm, atau upgrade Pro.
 
 ### Rollback
-Vercel Dashboard → Deployments → ⋮ → Promote to Production (previous deployment).
+Vercel Dashboard → Deployments → ⋮ → Promote to Production.
+
+## Deploy Manual
+```bash
+vercel deploy --prod --cwd backend
+```
 
 ## Tests
 ```bash
@@ -61,5 +68,5 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-## Contract
+## API Contract
 [`API_CONTRACT.md`](./API_CONTRACT.md)

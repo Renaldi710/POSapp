@@ -105,8 +105,8 @@
 
 ### Tasks
 - [x] Configure Vercel Env Vars for production (Neon connection string, `APP_ENV=production`, `DEBUG=False`)
-- [ ] Verify Neon Postgres (Singapore region) connects via `asyncpg` in production
-- [ ] Confirm auto-deploy triggers correctly from GitHub → Vercel on merge to `main`
+- [x] Verify Neon Postgres (Singapore region) connects via `asyncpg` in production
+- [x] Confirm auto-deploy triggers correctly from GitHub → Vercel on merge to `main`
 - [x] Add basic health check endpoint (`/health`) for uptime verification
 - [x] Document cold-start behavior and expected latency on serverless/free tier
 
