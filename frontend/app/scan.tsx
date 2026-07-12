@@ -29,7 +29,7 @@ export default function ScanScreen() {
     if (!scanning) return
     setScanning(false)
     try {
-      const res = await client.get<Product[]>(ENDPOINTS.PRODUCTS.LIST, { params: { search: data } })
+      const res = await client.get<Product[]>(ENDPOINTS.PRODUCTS.LIST, { params: { q: data } })
       const product = res.data[0]
       if (product) {
         addItem(product.id, product.name, product.price)

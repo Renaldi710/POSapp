@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native'
-import { useLocalSearchParams, Stack } from 'expo-router'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native'
+import { useLocalSearchParams, Stack, router } from 'expo-router'
 import { useProduct } from '../../src/features/products/hooks/useProducts'
 import { useStockMutation } from '../../src/features/inventory/hooks/useStockMutation'
+import { useDeleteProduct } from '../../src/features/inventory/hooks/useProductMutation'
 import Badge from '../../src/components/ui/Badge'
 import Button from '../../src/components/ui/Button'
 import { formatRupiah } from '../../src/utils/currency'
@@ -12,7 +13,19 @@ export default function ProductDetailScreen() {
   const productId = Number(id)
   const { data: product, isLoading } = useProduct(productId)
   const stockMutation = useStockMutation()
+  const deleteMutation = useDeleteProduct()
   const [restockAmount, setRestockAmount] = useState('')
+
+  const handleDelete = () => {
+    Alert.alert('Hapus Produk', `Yakin ingin menghapus "${product?.name}"?`, [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: () => deleteMutation.mutate(productId, { onSuccess: () => router.back() }),
+      },
+    ])
+  }
 
   if (isLoading || !product) {
     return (
@@ -40,7 +53,7 @@ export default function ProductDetailScreen() {
         <View className="bg-gray-50 rounded-xl p-4 mb-6">
           <View className="flex-row justify-between mb-3">
             <Text className="text-gray-600">Kategori</Text>
-            <Text className="text-gray-900 font-medium">{product.category_name || '-'}</Text>
+            <Text className="text-gray-900 font-medium">{product.category?.name || '-'}</Text>
           </View>
           <View className="flex-row justify-between mb-3">
             <Text className="text-gray-600">Harga</Text>
@@ -78,6 +91,15 @@ export default function ProductDetailScreen() {
             </Text>
           </View>
         )}
+
+        <View className="flex-row gap-3 pt-4 border-t border-gray-200">
+          <View className="flex-1">
+            <Button title="Edit" onPress={() => router.push(`/product/edit/${product.id}`)} variant="primary" />
+          </View>
+          <View className="flex-1">
+            <Button title="Hapus" onPress={handleDelete} variant="danger" loading={deleteMutation.isPending} />
+          </View>
+        </View>
       </View>
     </ScrollView>
   )

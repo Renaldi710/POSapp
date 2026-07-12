@@ -35,13 +35,13 @@ export interface Category {
 export interface Product {
   id: number
   category_id: number
-  category_name: string | null
-  sku: string
+  category: { id: number; name: string } | null
+  sku?: string
   name: string
   price: number
   stock: number
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface TransactionItem {

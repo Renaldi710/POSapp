@@ -7,7 +7,7 @@ export function useProducts(search?: string) {
   return useQuery({
     queryKey: ['products', search],
     queryFn: () =>
-      client.get<Product[]>(ENDPOINTS.PRODUCTS.LIST, { params: search ? { search } : {} }).then((r) => r.data),
+      client.get<Product[]>(ENDPOINTS.PRODUCTS.LIST, { params: search ? { q: search } : {} }).then((r) => r.data),
   })
 }
 
