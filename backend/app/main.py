@@ -1,13 +1,10 @@
 import hashlib
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
-load_dotenv()
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import APP_ENV, CORS_ORIGINS, DATABASE_URL, DEBUG
+from app.config import settings
 from app.database import Base, engine, SessionLocal
 from app.models import User, Category  # noqa: F401 — ensure models registered
 
@@ -22,7 +19,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
 
     # seed admin if empty
-    if DEBUG:
+    if settings.is_debug:
         async with SessionLocal() as db:
             from sqlalchemy import select
             result = await db.execute(select(User).limit(1))
@@ -41,7 +38,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="POSapp API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=settings.cors_list,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
