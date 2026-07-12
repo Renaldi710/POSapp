@@ -54,11 +54,11 @@
 **Owner:** Renaldi
 
 ### Tasks
-- [ ] Build CRUD routes for products (index, create, update, delete) directly in route handlers
-- [ ] Define Pydantic V2 schemas for request/response validation
-- [ ] Implement search by SKU/name and category filtering
-- [ ] Add stock validation (reject negative stock on update)
-- [ ] Write async tests covering CRUD + validation failure paths
+- [x] Build CRUD routes for products (index, create, update, delete) directly in route handlers
+- [x] Define Pydantic V2 schemas for request/response validation
+- [x] Implement search by SKU/name and category filtering
+- [x] Add stock validation (reject negative stock on update)
+- [x] Write async tests covering CRUD + validation failure paths
 
 ### Deliverables
 - ✅ Products API fully functional, documented via `/docs`
@@ -66,10 +66,10 @@
 - ✅ Stock can never go negative through the API
 
 ### PR Checklist
-- [ ] All DB calls are async (`await session.execute(...)`), no sync/blocking calls
-- [ ] No `services/` or `repository/` layer introduced (logic stays in route handlers)
-- [ ] Validation lives in Pydantic schemas, not manual if-checks in handlers
-- [ ] Tests cover at least one failure-path per endpoint
+- [x] All DB calls are async (`await session.execute(...)`), no sync/blocking calls
+- [x] No `services/` or `repository/` layer introduced (logic stays in route handlers)
+- [x] Validation lives in Pydantic schemas, not manual if-checks in handlers
+- [x] Tests cover at least one failure-path per endpoint
 
 ---
 
