@@ -1,38 +1,15 @@
 # POS API Contract
 
-Base URL local: `http://localhost:8000/api`  
-Base URL Vercel: `https://<project>.vercel.app/api`  
+Base URL local: `http://localhost:8000`  
+Base URL production: `https://backend-gold-sigma-21.vercel.app`  
 Format: JSON
 
-## Auth
-
-### Login
-```http
-POST /api/tokens/create
-Content-Type: application/json
-```
-
-```json
-{
-  "email": "admin@pos.app",
-  "password": "password",
-  "device_name": "mobile-app"
-}
-```
-
-Response `200`:
-```json
-{ "token": "abc123" }
-```
-
-Response `401`:
-```json
-{ "detail": "Invalid credentials" }
-```
+---
 
 ## Health
 
 ```http
+GET /health
 GET /api/health
 ```
 
@@ -41,66 +18,26 @@ Response `200`:
 { "status": "ok" }
 ```
 
-## Authenticated Requests
-
-All endpoints below require:
-```http
-Authorization: Bearer <token>
-```
-
-Unauthenticated response:
-```json
-{ "detail": "Unauthenticated" }
-```
-
-## User
-
-```http
-GET /api/user
-```
-
-Response:
-```json
-{
-  "id": 1,
-  "name": "Admin POS",
-  "email": "admin@pos.app",
-  "role": "admin",
-  "created_at": "2026-07-06T09:19:25"
-}
-```
-
-## Categories
-
-```http
-GET /api/categories
-POST /api/categories
-GET /api/categories/{id}
-PUT /api/categories/{id}
-DELETE /api/categories/{id}
-```
-
-Create/update body:
-```json
-{ "name": "Minuman" }
-```
-
-List response item:
-```json
-{ "id": 1, "name": "Minuman", "products_count": 0 }
-```
+---
 
 ## Products
 
 ```http
-GET /api/products
-POST /api/products
-GET /api/products/{id}
-PUT /api/products/{id}
+GET    /api/products
+POST   /api/products
+GET    /api/products/{id}
+PUT    /api/products/{id}
 DELETE /api/products/{id}
 ```
 
-Create body:
+### Create
+
+```http
+POST /api/products
+Content-Type: application/json
+```
+
+Body:
 ```json
 {
   "category_id": 1,
@@ -110,9 +47,7 @@ Create body:
 }
 ```
 
-Update body: any subset of `category_id`, `name`, `price`, `stock`.
-
-Response item:
+Response `201`:
 ```json
 {
   "id": 1,
@@ -124,17 +59,84 @@ Response item:
 }
 ```
 
+### Update
+
+```http
+PUT /api/products/{id}
+Content-Type: application/json
+```
+
+Body (any subset):
+```json
+{ "name": "Es Teh Manis", "price": 6000 }
+```
+
+Response `200`: same shape as create response.
+
+### List (with search & filter)
+
+```http
+GET /api/products
+GET /api/products?q=teh
+GET /api/products?category_id=1
+GET /api/products?q=teh&category_id=1
+```
+
+| Query | Type | Description |
+|-------|------|-------------|
+| `q` | string | Search by name or SKU (case-insensitive) |
+| `category_id` | int | Filter by category |
+
+Response `200`:
+```json
+[
+  {
+    "id": 1,
+    "category_id": 1,
+    "name": "Es Teh",
+    "price": 5000,
+    "stock": 100,
+    "category": { "id": 1, "name": "Minuman" }
+  }
+]
+```
+
+### Get by ID
+
+```http
+GET /api/products/1
+```
+
+Response `200`: single product object.  
+Response `404`: `{ "detail": "Product not found" }`
+
+### Delete
+
+```http
+DELETE /api/products/1
+```
+
+Response `204` (no content).  
+Response `404`: `{ "detail": "Product not found" }`
+
+---
+
 ## Transactions
 
 ```http
-GET /api/transactions
-POST /api/transactions
-GET /api/transactions/{id}
-PUT /api/transactions/{id}
-DELETE /api/transactions/{id}
+GET    /api/transactions
+POST   /api/transactions
+GET    /api/transactions/{id}
 ```
 
-Create body:
+### Checkout
+
+```http
+POST /api/transactions
+Content-Type: application/json
+```
+
+Body:
 ```json
 {
   "items": [
@@ -143,13 +145,14 @@ Create body:
 }
 ```
 
-Create behavior:
-- checks stock
-- decrements stock atomically
-- saves sale-time `price` and `subtotal`
-- sets `status` to `completed`
+Behavior:
+- validates each product exists
+- validates stock >= quantity
+- snapshots `price` from product price at time of sale
+- deducts stock atomically in a single transaction
+- rollbacks fully on any failure (no partial stock changes)
 
-Create response:
+Response `201`:
 ```json
 {
   "id": 1,
@@ -169,37 +172,74 @@ Create response:
 }
 ```
 
-## Reports
+### List (paginated & filterable)
 
 ```http
-GET /api/reports/daily?date=2026-07-06
+GET /api/transactions
+GET /api/transactions?page=1&per_page=20
+GET /api/transactions?date_from=2026-07-01&date_to=2026-07-12
+GET /api/transactions?user_id=1
 ```
 
-`date` optional; defaults to today.
+| Query | Type | Default | Description |
+|-------|------|---------|-------------|
+| `page` | int | 1 | Page number |
+| `per_page` | int | 20 | Items per page (max 100) |
+| `date_from` | date | — | Filter: created_at >= date |
+| `date_to` | date | — | Filter: created_at <= date |
+| `user_id` | int | — | Filter by cashier |
 
-Response:
+Response `200`:
 ```json
 {
-  "date": "2026-07-06",
-  "total_transactions": 1,
-  "total_revenue": 10000,
-  "total_items_sold": 2,
-  "top_products": [
+  "data": [
     {
-      "product_id": 1,
-      "total_qty": 2,
-      "total": 10000,
-      "product": { "id": 1, "name": "Es Teh" }
+      "id": 1,
+      "user_id": 1,
+      "total_amount": 10000,
+      "status": "completed",
+      "created_at": "2026-07-12T10:00:00"
     }
-  ]
+  ],
+  "total": 42,
+  "page": 1,
+  "per_page": 20
 }
 ```
 
+### Get by ID
+
+```http
+GET /api/transactions/1
+```
+
+Response `200`: full transaction object with items (same shape as checkout response).
+
+---
+
 ## Status Codes
 
-- `200` OK
-- `201` Created
-- `204` Deleted
-- `401` Unauthenticated / invalid login
-- `404` Not found
-- `422` Validation or insufficient stock
+| Code | Meaning |
+|------|---------|
+| `200` | OK |
+| `201` | Created |
+| `204` | Deleted (no content) |
+| `400` | Bad request (invalid category, no fields to update) |
+| `404` | Not found |
+| `409` | Conflict (duplicate SKU) |
+| `422` | Validation error / insufficient stock |
+
+Response body on error:
+```json
+{ "detail": "Insufficient stock for 'Es Teh': have 5, need 99" }
+```
+
+---
+
+## Notes
+
+- No auth implemented yet — `user_id` defaults to `1` (admin).
+- Categories, auth (login/token), user, and reports endpoints are not yet implemented.
+- SKU is auto-generated on create; not required in request body.
+- All money values are in **IDR (rupiah)**.
+- Timestamps are ISO 8601 (`YYYY-MM-DDTHH:MM:SS`).
