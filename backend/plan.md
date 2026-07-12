@@ -4,11 +4,11 @@
 **Owner:** Renaldi
 
 ### Tasks
-- [ ] Initialize FastAPI project structure (`app/main.py`, `app/routers/`, `app/models/`, `app/schemas/`)
-- [ ] Create `requirements.txt` (fastapi, uvicorn, sqlalchemy[asyncio], asyncpg, aiosqlite, pydantic-settings)
-- [ ] Setup `pydantic-settings` config that auto-detects `APP_ENV` (development → SQLite, production → Neon)
-- [ ] Setup `.env.example` and `.env.local` (SQLite, `DEBUG=True`)
-- [ ] Configure `vercel.json` for serverless Python deployment
+- [x] Initialize FastAPI project structure (`app/main.py`, `app/routers/`, `app/models/`, `app/schemas/`)
+- [x] Create `requirements.txt` (fastapi, uvicorn, sqlalchemy[asyncio], asyncpg, aiosqlite, pydantic-settings)
+- [x] Setup `pydantic-settings` config that auto-detects `APP_ENV` (development → SQLite, production → Neon)
+- [x] Setup `.env.example` and `.env.local` (SQLite, `DEBUG=True`)
+- [x] Configure `vercel.json` for serverless Python deployment
 
 ### Deliverables
 - ✅ Project boots locally on SQLite with zero external dependencies
@@ -16,10 +16,10 @@
 - ✅ Config cleanly switches between local and production via `APP_ENV`
 
 ### PR Checklist
-- [ ] `.env.example` documents every required key (no real secrets)
-- [ ] `.gitignore` excludes `.env*`, `__pycache__`, local `.db` files
-- [ ] `requirements.txt` pinned to compatible versions
-- [ ] App starts with `uvicorn app.main:app --reload` without errors
+- [x] `.env.example` documents every required key (no real secrets)
+- [x] `.gitignore` excludes `.env*`, `__pycache__`, local `.db` files
+- [x] `requirements.txt` pinned to compatible versions
+- [x] App starts with `uvicorn app.main:app --reload` without errors
 
 ---
 
