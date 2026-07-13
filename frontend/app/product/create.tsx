@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { Stack, router } from 'expo-router'
 import { useCreateProduct } from '../../src/features/inventory/hooks/useProductMutation'
 import ProductForm from '../../src/features/inventory/components/ProductForm'
+import ScreenLayout from '../../src/components/layout/ScreenLayout'
 
 export default function CreateProductScreen() {
   const createMutation = useCreateProduct()
@@ -14,13 +15,12 @@ export default function CreateProductScreen() {
   )
 
   return (
-    <>
-      <Stack.Screen options={{ title: 'Tambah Produk' }} />
+    <ScreenLayout title="Tambah Produk">
       <ProductForm
         onSubmit={handleSubmit}
         loading={createMutation.isPending}
         error={createMutation.mutationError}
       />
-    </>
+    </ScreenLayout>
   )
 }

@@ -22,6 +22,7 @@ export function useCheckout() {
     mutationFn: (data: { metode: string; uangDiterima: number; cetakStruk: boolean }) => {
       const payload: CreateTransactionPayload = {
         items: items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
+        payment_method: data.metode,
       }
       return client.post<Transaction>(ENDPOINTS.TRANSACTIONS.CREATE, payload).then((r) => r.data)
     },

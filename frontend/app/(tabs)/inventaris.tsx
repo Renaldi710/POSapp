@@ -1,16 +1,27 @@
 import { useState, useCallback } from 'react'
-import { View, TextInput, TouchableOpacity, Text } from 'react-native'
+import { View, TextInput, TouchableOpacity, Text, ScrollView } from 'react-native'
+import { Search, Plus, Package, AlertTriangle, XCircle, TrendingUp } from 'lucide-react-native'
 import { router } from 'expo-router'
 import { useInventory } from '../../src/features/inventory/hooks/useInventory'
 import DataTable from '../../src/components/ui/DataTable'
 import Badge from '../../src/components/ui/Badge'
+import StatCard from '../../src/components/ui/StatCard'
+import ProgressBar from '../../src/components/layout/ProgressBar'
 import { formatRupiah } from '../../src/utils/currency'
 import type { Product } from '../../src/api/types'
 import type { Column } from '../../src/components/ui/DataTable'
+import ScreenLayout from '../../src/components/layout/ScreenLayout'
 
 export default function InventarisScreen() {
   const [search, setSearch] = useState('')
+  const [filterKategori, setFilterKategori] = useState('')
   const { data: products, isLoading } = useInventory(search)
+
+  const stockColor = (stock: number) => {
+    if (stock === 0) return '#EF4444'
+    if (stock < 10) return '#F59E0B'
+    return '#22C55E'
+  }
 
   const stockVariant = (stock: number) => {
     if (stock === 0) return 'danger' as const
@@ -18,38 +29,84 @@ export default function InventarisScreen() {
     return 'success' as const
   }
 
+  const maxStock = Math.max(...(products?.map((p) => p.stock) || [1]), 1)
+
   const handleRowPress = useCallback((item: Product) => {
     router.push(`/product/${item.id}`)
   }, [])
 
   const columns: Column<Product>[] = [
-    { key: 'name', label: 'Nama', flex: 2 },
-    { key: 'sku', label: 'SKU', flex: 1.2 },
-    { key: 'category', label: 'Kategori', flex: 1.2, render: (item) => <Text className="text-sm text-gray-600">{item.category?.name || '-'}</Text> },
-    { key: 'price', label: 'Harga', flex: 1, render: (item) => <Text className="text-sm text-gray-900">{formatRupiah(item.price)}</Text> },
-    { key: 'stock', label: 'Stok', flex: 0.8, render: (item) => <Badge label={String(item.stock)} variant={stockVariant(item.stock)} /> },
+    { key: 'sku', label: 'SKU', flex: 1, render: (item) => <Text className="text-xs text-text-light">{item.sku || '-'}</Text> },
+    { key: 'name', label: 'Nama Barang', flex: 1.5 },
+    { key: 'category', label: 'Kategori', flex: 1, render: (item) => <Text className="text-sm text-text-medium">{item.category?.name || '-'}</Text> },
+    {
+      key: 'stock', label: 'Level Stok', flex: 1.5,
+      render: (item) => (
+        <View className="flex-row items-center gap-2">
+          <View className="flex-1">
+            <ProgressBar value={item.stock} max={maxStock} color={stockColor(item.stock)} />
+          </View>
+          <Badge label={String(item.stock)} variant={stockVariant(item.stock)} />
+        </View>
+      ),
+    },
+    { key: 'buy_price', label: 'Harga Beli', flex: 1, render: (item) => <Text className="text-sm text-text-dark">{(item as any).buy_price ? formatRupiah((item as any).buy_price) : '-'}</Text> },
+    { key: 'price', label: 'Harga Jual', flex: 1, render: (item) => <Text className="text-sm text-text-dark">{formatRupiah(item.price)}</Text> },
+    {
+      key: 'actions', label: 'Aksi', flex: 0.8,
+      render: (item) => (
+        <TouchableOpacity onPress={() => router.push(`/product/${item.id}`)}>
+          <Text className="text-primary text-sm font-medium">Edit</Text>
+        </TouchableOpacity>
+      ),
+    },
   ]
 
+  const totalSKU = products?.length || 0
+  const stockHabis = products?.filter((p) => p.stock === 0).length || 0
+  const stockMenipis = products?.filter((p) => p.stock > 0 && p.stock < 10).length || 0
+  const barangTerjual = products?.reduce((s, p) => s + (p as any).sold_count || 0, 0) || 0
+
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center px-4 pt-4 pb-2 gap-2">
-        <TextInput
-          className="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-4 py-2.5 text-base"
-          placeholder="Cari produk..."
-          value={search}
-          onChangeText={setSearch}
-        />
-        <TouchableOpacity className="bg-blue-600 px-4 py-2.5 rounded-lg" onPress={() => router.push('/product/create')}>
-          <Text className="text-white font-medium text-sm">+</Text>
-        </TouchableOpacity>
+    <ScreenLayout title="Inventaris">
+      <View className="px-4 pt-4">
+        <View className="flex-row items-center gap-2 mb-4">
+          <View className="flex-1 flex-row items-center bg-bg-search rounded-full px-4">
+            <Search size={18} color="#737686" />
+            <TextInput
+              className="flex-1 ml-2 py-2.5 text-base text-text-dark"
+              placeholder="Cari produk..."
+              placeholderTextColor="#737686"
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
+          <TouchableOpacity className="bg-primary px-4 py-2.5 rounded-xl" onPress={() => router.push('/product/create')}>
+            <Text className="text-white font-medium text-sm">+ Tambah Baru</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View className="flex-row gap-3 mb-4">
+          <StatCard label="Total SKU" value={String(totalSKU)} icon={<Package size={18} color="#2563EB" />} />
+          <StatCard label="Stok Habis" value={String(stockHabis)} icon={<XCircle size={18} color="#EF4444" />} />
+        </View>
+        <View className="flex-row gap-3 mb-4">
+          <StatCard label="Stok Menipis" value={String(stockMenipis)} icon={<AlertTriangle size={18} color="#F59E0B" />} />
+          <StatCard label="Barang Terjual" value={String(barangTerjual)} icon={<TrendingUp size={18} color="#22C55E" />} />
+        </View>
       </View>
+
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-gray-400">Memuat...</Text>
+          <Text className="text-text-light">Memuat...</Text>
         </View>
       ) : (
-        <DataTable columns={columns} data={products || []} keyExtractor={(item) => String(item.id)} onRowPress={handleRowPress} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={{ minWidth: 600 }}>
+            <DataTable columns={columns} data={products || []} keyExtractor={(item) => String(item.id)} onRowPress={handleRowPress} />
+          </View>
+        </ScrollView>
       )}
-    </View>
+    </ScreenLayout>
   )
 }

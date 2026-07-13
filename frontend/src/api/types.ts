@@ -11,11 +11,12 @@ export interface ValidationError {
 export interface LoginPayload {
   email: string
   password: string
-  device_name: string
 }
 
 export interface LoginResponse {
   token: string
+  user_id: number
+  name: string
 }
 
 export interface User {
@@ -29,7 +30,8 @@ export interface User {
 export interface Category {
   id: number
   name: string
-  products_count: number
+  created_at: string
+  updated_at: string
 }
 
 export interface Product {
@@ -57,6 +59,7 @@ export interface Transaction {
   id: number
   user_id: number
   total_amount: number
+  payment_method?: string
   status: string
   created_at: string
   items?: TransactionItem[]
@@ -66,6 +69,7 @@ export interface TransactionListItem {
   id: number
   user_id: number
   total_amount: number
+  payment_method?: string
   status: string
   created_at: string
 }
@@ -79,17 +83,17 @@ export interface TransactionListResponse {
 
 export interface CreateTransactionPayload {
   items: { product_id: number; quantity: number }[]
+  payment_method: string
 }
 
 export interface DailyReport {
   date: string
   total_transactions: number
   total_revenue: number
-  total_items_sold: number
   top_products: {
     product_id: number
-    total_qty: number
-    total: string
-    product: { id: number; name: string }
+    product_name: string
+    total_quantity: number
+    total_subtotal: number
   }[]
 }
