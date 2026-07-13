@@ -65,6 +65,12 @@ async def create_token(body: TokenCreateRequest, db: AsyncSession = Depends(get_
     return TokenResponse(token=token_key, user_id=user.id, name=user.name)
 
 
+async def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(403, "Admin access required")
+    return user
+
+
 @router.get("/user", response_model=UserResponse)
 async def get_user(user: User = Depends(get_current_user)):
     return user

@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.category import Category
+from app.models.user import User
+from app.routers.auth import require_admin
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
 
@@ -31,7 +33,7 @@ async def list_categories(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=CategoryResponse, status_code=201)
-async def create_category(body: CategoryCreate, db: AsyncSession = Depends(get_db)):
+async def create_category(body: CategoryCreate, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     now = datetime.utcnow()
     cat = Category(name=body.name, created_at=now, updated_at=now)
     db.add(cat)

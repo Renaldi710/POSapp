@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.product import Product
 from app.models.category import Category
+from app.models.user import User
+from app.routers.auth import require_admin
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, CategoryInfo
 
 router = APIRouter(prefix="/api/products", tags=["products"])
@@ -63,7 +65,7 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=ProductResponse, status_code=201)
-async def create_product(body: ProductCreate, db: AsyncSession = Depends(get_db)):
+async def create_product(body: ProductCreate, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     cat = await db.get(Category, body.category_id)
     if not cat:
         raise HTTPException(400, "Category not found")
@@ -78,7 +80,8 @@ async def create_product(body: ProductCreate, db: AsyncSession = Depends(get_db)
 
 @router.put("/{product_id}", response_model=ProductResponse)
 async def update_product(
-    product_id: int, body: ProductUpdate, db: AsyncSession = Depends(get_db)
+    product_id: int, body: ProductUpdate, db: AsyncSession = Depends(get_db),
+    admin: User = Depends(require_admin),
 ):
     p = await _get_product(db, product_id)
     if not p:
@@ -99,7 +102,7 @@ async def update_product(
 
 
 @router.delete("/{product_id}", status_code=204)
-async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_product(product_id: int, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     p = await db.get(Product, product_id)
     if not p:
         raise HTTPException(404, "Product not found")
