@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -24,10 +26,13 @@ class ProductUpdate(BaseModel):
 
 class ProductResponse(BaseModel):
     id: int
+    sku: str
     category_id: int
     name: str
     price: float
     stock: int
+    created_at: datetime
+    updated_at: datetime
     category: CategoryInfo
 
     model_config = {"from_attributes": True}

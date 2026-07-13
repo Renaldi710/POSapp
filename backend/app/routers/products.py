@@ -17,10 +17,13 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 def _response(p: Product) -> ProductResponse:
     return ProductResponse(
         id=p.id,
+        sku=p.sku,
         category_id=p.category_id,
         name=p.name,
         price=p.price,
         stock=p.stock,
+        created_at=p.created_at,
+        updated_at=p.updated_at,
         category=CategoryInfo(id=p.category.id, name=p.category.name),
     )
 
