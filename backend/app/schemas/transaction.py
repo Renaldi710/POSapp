@@ -10,6 +10,7 @@ class TransactionItemCreate(BaseModel):
 
 class TransactionCreate(BaseModel):
     items: list[TransactionItemCreate] = Field(min_length=1)
+    payment_method: str = Field(default="tunai", pattern="^(tunai|qris|debit_kredit)$")
 
 
 class ItemProductInfo(BaseModel):
@@ -34,6 +35,7 @@ class TransactionResponse(BaseModel):
     id: int
     user_id: int
     total_amount: float
+    payment_method: str
     status: str
     items: list[TransactionItemResponse]
     created_at: datetime
@@ -45,6 +47,7 @@ class TransactionListItem(BaseModel):
     id: int
     user_id: int
     total_amount: float
+    payment_method: str
     status: str
     created_at: datetime
 

@@ -25,16 +25,36 @@ class TestCheckout:
     async def test_success(self, client: AsyncClient, seed_user_and_product):
         pid = seed_user_and_product["product_id"]
         r = await client.post("/api/transactions", json={
-            "items": [{"product_id": pid, "quantity": 2}]
+            "items": [{"product_id": pid, "quantity": 2}],
+            "payment_method": "tunai",
         })
         assert r.status_code == 201
         data = r.json()
         assert data["total_amount"] == 20_000
+        assert data["payment_method"] == "tunai"
         assert data["status"] == "completed"
         assert len(data["items"]) == 1
         assert data["items"][0]["price"] == 10_000
         assert data["items"][0]["subtotal"] == 20_000
         assert data["items"][0]["product"]["name"] == "Test Item"
+
+    async def test_payment_methods(self, client: AsyncClient, seed_user_and_product):
+        pid = seed_user_and_product["product_id"]
+        for method in ("qris", "debit_kredit"):
+            r = await client.post("/api/transactions", json={
+                "items": [{"product_id": pid, "quantity": 1}],
+                "payment_method": method,
+            })
+            assert r.status_code == 201, f"{method} failed"
+            assert r.json()["payment_method"] == method
+
+    async def test_invalid_payment_method(self, client: AsyncClient, seed_user_and_product):
+        pid = seed_user_and_product["product_id"]
+        r = await client.post("/api/transactions", json={
+            "items": [{"product_id": pid, "quantity": 1}],
+            "payment_method": "bitcoin",
+        })
+        assert r.status_code == 422
 
     async def test_insufficient_stock(self, client: AsyncClient, seed_user_and_product):
         pid = seed_user_and_product["product_id"]
@@ -134,4 +154,31 @@ class TestGetTransaction:
 
     async def test_not_found(self, client: AsyncClient):
         r = await client.get("/api/transactions/999")
+        assert r.status_code == 404
+
+
+class TestReceipt:
+    async def test_success(self, client: AsyncClient, seed_user_and_product):
+        pid = seed_user_and_product["product_id"]
+        cr = await client.post("/api/transactions", json={
+            "items": [{"product_id": pid, "quantity": 2}],
+            "payment_method": "qris",
+        })
+        txn_id = cr.json()["id"]
+
+        r = await client.get(f"/api/transactions/{txn_id}/receipt")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["transaction_id"] == txn_id
+        assert data["payment_method"] == "qris"
+        assert data["total_amount"] == 20_000
+        assert len(data["items"]) == 1
+        assert data["items"][0]["name"] == "Test Item"
+        assert data["items"][0]["quantity"] == 2
+        assert data["items"][0]["price"] == 10_000
+        assert data["items"][0]["subtotal"] == 20_000
+        assert "created_at" in data
+
+    async def test_not_found(self, client: AsyncClient):
+        r = await client.get("/api/transactions/999/receipt")
         assert r.status_code == 404

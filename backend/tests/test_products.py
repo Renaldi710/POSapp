@@ -26,8 +26,21 @@ class TestCreateProduct:
         data = r.json()
         assert data["name"] == "Foo"
         assert data["stock"] == 5
+        assert data["sku"].startswith("PRD-")
+        assert data["image_url"] is None
+        assert "created_at" in data
+        assert "updated_at" in data
         assert data["category"]["name"] == "Makanan"
         assert data["category"]["id"] == cat_id
+
+    async def test_with_image_url(self, client: AsyncClient, seed_categories):
+        cat_id = seed_categories["Makanan"]
+        r = await client.post("/api/products", json={
+            "category_id": cat_id, "name": "Foo Img", "price": 10.0, "stock": 5,
+            "image_url": "https://example.com/foo.jpg",
+        })
+        assert r.status_code == 201
+        assert r.json()["image_url"] == "https://example.com/foo.jpg"
 
     async def test_negative_stock(self, client: AsyncClient, seed_categories):
         r = await client.post("/api/products", json={
@@ -100,6 +113,18 @@ class TestUpdateProduct:
         assert r.status_code == 200
         assert r.json()["name"] == "New"
         assert r.json()["price"] == 10.0
+
+    async def test_update_image_url(self, client: AsyncClient, seed_categories):
+        cat_id = seed_categories["Makanan"]
+        cr = await client.post("/api/products", json={
+            "category_id": cat_id, "name": "Old", "price": 5.0, "stock": 1,
+        })
+        pid = cr.json()["id"]
+        r = await client.put(f"/api/products/{pid}", json={
+            "image_url": "https://example.com/new.jpg"
+        })
+        assert r.status_code == 200
+        assert r.json()["image_url"] == "https://example.com/new.jpg"
 
     async def test_negative_stock(self, client: AsyncClient, seed_categories):
         cat_id = seed_categories["Makanan"]
