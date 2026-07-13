@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models.product import Product
 from app.models.category import Category
 from app.models.user import User
-from app.routers.auth import require_admin
+from app.dependencies import require_admin
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, CategoryInfo
 
 router = APIRouter(prefix="/api/products", tags=["products"])
