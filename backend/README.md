@@ -2,7 +2,7 @@
 
 FastAPI backend untuk POS UMKM. Deployed on **Vercel + Neon PostgreSQL**.
 
-Production URL: https://backend-gold-sigma-21.vercel.app
+Production URL: https://backend-gold-sigma-21.vercel.app  
 Swagger docs: https://backend-gold-sigma-21.vercel.app/docs
 
 ## Stack
@@ -23,16 +23,15 @@ uvicorn app.main:app --reload
 # → http://localhost:8000/docs
 ```
 
-SQLite auto-created — zero external deps needed. Seed data (admin user + categories) otomatis saat `APP_ENV=local`.
+SQLite auto-created — zero external deps needed. Seed data (admin + kasir users, 4 categories, 200+ products) otomatis saat `APP_ENV=local`.
 
 ## Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `APP_ENV` | No | `development` | `development`/`local` → SQLite, `production` → Neon |
+| `APP_ENV` | No | `development` | `development`/`local` → SQLite + seed data, `production` → Neon |
 | `DATABASE_URL` | Prod only | — | Neon Direct Connection (`postgresql+asyncpg://...:5432/...`) |
 | `CORS_ORIGINS` | No | `*` | Comma-separated allowed origins |
-| `DEBUG` | No | `true` | Seeds admin user on startup when true |
 
 ## Production (Vercel + Neon)
 
@@ -47,6 +46,12 @@ Config otomatis:
 - convert `postgresql://` → `postgresql+asyncpg://`
 - strip parameter `sslmode` & `channel_binding` (libpq-only, asyncpg reject)
 - reject port `6543` (gunakan direct connection port `5432`)
+
+### Seed Data (Production)
+Seed data tidak otomatis di production. Jalankan script manual:
+```bash
+python app/seed_data.py  # atau via koneksi langsung ke Neon
+```
 
 ### Auto-deploy
 Push/merge ke `main` → Vercel auto-deploys.
@@ -70,3 +75,15 @@ python -m pytest tests/ -v
 
 ## API Contract
 [`API_CONTRACT.md`](./API_CONTRACT.md)
+
+## Seeded Credentials
+| Role  | Email              | Password  |
+|-------|--------------------|-----------|
+| Admin | admin@pos.app      | password  |
+| Kasir | kasir@pos.app      | password  |
+
+## Role-Based Access
+| Role  | Products (CRUD) | Categories (CRUD) | Transactions |
+|-------|-----------------|-------------------|--------------|
+| Admin | ✅ Full access   | ✅ Create + List   | ✅           |
+| Kasir | ✅ View only     | ✅ List only       | ✅           |
