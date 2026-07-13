@@ -68,8 +68,6 @@ async def create_token(body: TokenCreateRequest, db: AsyncSession = Depends(get_
 @router.get("/user", response_model=UserResponse)
 async def get_user(user: User = Depends(get_current_user)):
     return user
-
-
 @router.delete("/tokens", status_code=204)
 async def logout(
     authorization: str | None = Header(None),
