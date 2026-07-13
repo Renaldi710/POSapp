@@ -1,28 +1,36 @@
 import { View, Text } from 'react-native'
+import type { ReactNode } from 'react'
 
 interface StatCardProps {
   label: string
   value: string
-  variant?: 'blue' | 'green' | 'yellow'
+  icon?: ReactNode
+  trend?: string
+  trendUp?: boolean
+  footnote?: string
 }
 
-const BG: Record<string, string> = {
-  blue: 'bg-blue-50 border-blue-200',
-  green: 'bg-green-50 border-green-200',
-  yellow: 'bg-yellow-50 border-yellow-200',
-}
-
-const TEXT: Record<string, string> = {
-  blue: 'text-blue-800',
-  green: 'text-green-800',
-  yellow: 'text-yellow-800',
-}
-
-export default function StatCard({ label, value, variant = 'blue' }: StatCardProps) {
+export default function StatCard({ label, value, icon, trend, trendUp, footnote }: StatCardProps) {
   return (
-    <View className={`flex-1 rounded-xl border p-4 ${BG[variant]}`}>
-      <Text className={`text-xs font-medium ${TEXT[variant]} opacity-80`}>{label}</Text>
-      <Text className={`text-xl font-bold mt-1 ${TEXT[variant]}`}>{value}</Text>
+    <View className="flex-1 bg-white rounded-xl border border-border p-4 shadow-sm">
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="text-xs text-text-light font-medium">{label}</Text>
+        {icon && <View>{icon}</View>}
+      </View>
+      <Text className="text-xl font-bold text-text-dark">{value}</Text>
+      {trend && (
+        <View className="flex-row items-center mt-1.5 gap-1.5">
+          <View className={`px-1.5 py-0.5 rounded ${trendUp ? 'bg-green-100' : 'bg-red-100'}`}>
+            <Text className={`text-xs font-medium ${trendUp ? 'text-green-700' : 'text-red-700'}`}>
+              {trendUp ? '+' : ''}{trend}
+            </Text>
+          </View>
+          {footnote && <Text className="text-xs text-text-light">{footnote}</Text>}
+        </View>
+      )}
+      {footnote && !trend && (
+        <Text className="text-xs text-text-light mt-1">{footnote}</Text>
+      )}
     </View>
   )
 }

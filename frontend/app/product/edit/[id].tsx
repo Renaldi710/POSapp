@@ -1,9 +1,10 @@
 import { useCallback } from 'react'
 import { View, Text } from 'react-native'
-import { Stack, useLocalSearchParams, router } from 'expo-router'
+import { useLocalSearchParams, router } from 'expo-router'
 import { useProduct } from '../../../src/features/products/hooks/useProducts'
 import { useUpdateProduct } from '../../../src/features/inventory/hooks/useProductMutation'
 import ProductForm from '../../../src/features/inventory/components/ProductForm'
+import ScreenLayout from '../../../src/components/layout/ScreenLayout'
 
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -20,29 +21,32 @@ export default function EditProductScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-400">Memuat...</Text>
-      </View>
+      <ScreenLayout title="Edit Produk">
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-text-light">Memuat...</Text>
+        </View>
+      </ScreenLayout>
     )
   }
 
   if (!product) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-400">Produk tidak ditemukan</Text>
-      </View>
+      <ScreenLayout title="Edit Produk">
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-text-light">Produk tidak ditemukan</Text>
+        </View>
+      </ScreenLayout>
     )
   }
 
   return (
-    <>
-      <Stack.Screen options={{ title: 'Edit Produk' }} />
+    <ScreenLayout title="Edit Produk">
       <ProductForm
         initial={product}
         onSubmit={handleSubmit}
         loading={updateMutation.isPending}
         error={updateMutation.mutationError}
       />
-    </>
+    </ScreenLayout>
   )
 }

@@ -3,12 +3,12 @@ import client from '../../../api/client'
 import { ENDPOINTS } from '../../../api/endpoints'
 import type { Category } from '../../../api/types'
 
-// ponytail: backend tidak punya endpoint /api/categories — fallback ke 4 kategori default
+// ponytail: fallback sampai backend /api/categories dideploy
 const FALLBACK_CATEGORIES: Category[] = [
-  { id: 1, name: 'Makanan', products_count: 0 },
-  { id: 2, name: 'Minuman', products_count: 0 },
-  { id: 3, name: 'Snack', products_count: 0 },
-  { id: 4, name: 'Lainnya', products_count: 0 },
+  { id: 1, name: 'Makanan', created_at: '', updated_at: '' },
+  { id: 2, name: 'Minuman', created_at: '', updated_at: '' },
+  { id: 3, name: 'Snack', created_at: '', updated_at: '' },
+  { id: 4, name: 'Lainnya', created_at: '', updated_at: '' },
 ]
 
 export function useCategories() {

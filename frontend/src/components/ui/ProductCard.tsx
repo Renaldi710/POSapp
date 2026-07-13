@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native'
+import { Package } from 'lucide-react-native'
 import { formatRupiah } from '../../utils/currency'
-import Badge from './Badge'
 import type { Product } from '../../api/types'
 
 interface ProductCardProps {
@@ -10,15 +10,15 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onAdd }: ProductCardProps) {
   return (
-    <View className="bg-white rounded-xl p-3 border border-gray-100">
-      <Text className="text-base font-semibold text-gray-900" numberOfLines={1}>
-        {product.name}
-      </Text>
-      <Text className="text-lg font-bold text-blue-600 mt-1">{formatRupiah(product.price)}</Text>
-      <View className="flex-row items-center justify-between mt-2">
-        <Badge label={`Stok: ${product.stock}`} variant={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'danger'} />
-        <TouchableOpacity className="bg-blue-600 px-3 py-1.5 rounded-lg" onPress={() => onAdd(product)}>
-          <Text className="text-white text-sm font-medium">+</Text>
+    <View className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+      <View className="h-24 bg-bg-search items-center justify-center">
+        <Package size={32} color="#737686" />
+      </View>
+      <View className="p-3">
+        <Text className="text-sm font-semibold text-text-dark" numberOfLines={1}>{product.name}</Text>
+        <Text className="text-base font-bold text-primary mt-0.5">{formatRupiah(product.price)}</Text>
+        <TouchableOpacity className="bg-primary px-3 py-1.5 rounded-lg items-center mt-2" onPress={() => onAdd(product)}>
+          <Text className="text-white text-xs font-semibold">Tambah</Text>
         </TouchableOpacity>
       </View>
     </View>

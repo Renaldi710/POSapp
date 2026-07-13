@@ -1,7 +1,6 @@
 export const ENDPOINTS = {
   AUTH: {
-    LOGIN: '/api/tokens/create',
-  },
+    LOGIN: '/api/tokens/create', },
   USER: {
     ME: '/api/user',
   },
@@ -20,6 +19,7 @@ export const ENDPOINTS = {
     LIST: '/api/transactions',
     DETAIL: (id: number) => `/api/transactions/${id}`,
     CREATE: '/api/transactions',
+    RECEIPT: (id: number) => `/api/transactions/${id}/receipt`,
   },
   REPORTS: {
     DAILY: '/api/reports/daily',

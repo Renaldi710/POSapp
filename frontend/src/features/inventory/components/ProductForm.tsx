@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react'
-import { View, Text, TextInput, TouchableOpacity, Modal, FlatList } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Modal, FlatList, ScrollView } from 'react-native'
 import { router } from 'expo-router'
 import { useCategories } from '../../categories/hooks/useCategories'
 import Button from '../../../components/ui/Button'
+import Input from '../../../components/ui/Input'
 import type { Product } from '../../../api/types'
 
 interface ProductFormProps {
@@ -33,21 +34,20 @@ export default function ProductForm({ initial, onSubmit, loading, error }: Produ
   }, [name, price, stock, categoryId, onSubmit])
 
   return (
-    <View className="flex-1 bg-white p-6">
-      <Text className="text-sm font-medium text-gray-700 mb-1">Nama Produk</Text>
-      <TextInput
-        className="border border-gray-300 rounded-lg px-4 py-3 text-base mb-4"
+    <ScrollView className="flex-1 bg-bg-page px-4 pt-4">
+      <Input
+        label="Nama Produk"
         placeholder="Nama produk"
         value={name}
         onChangeText={setName}
       />
 
-      <Text className="text-sm font-medium text-gray-700 mb-1">Kategori</Text>
+      <Text className="text-sm font-medium text-text-dark mb-1.5">Kategori</Text>
       <TouchableOpacity
-        className="border border-gray-300 rounded-lg px-4 py-3 mb-4"
+        className="bg-bg-input border border-border rounded-xl px-4 py-3.5 mb-4"
         onPress={() => setShowCategoryPicker(true)}
       >
-        <Text className={`text-base ${selectedCategory ? 'text-gray-900' : 'text-gray-400'}`}>
+        <Text className={`text-base ${selectedCategory ? 'text-text-dark' : 'text-text-light'}`}>
           {selectedCategory?.name || 'Pilih kategori'}
         </Text>
       </TouchableOpacity>
@@ -55,21 +55,21 @@ export default function ProductForm({ initial, onSubmit, loading, error }: Produ
       <Modal visible={showCategoryPicker} transparent animationType="slide" onRequestClose={() => setShowCategoryPicker(false)}>
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-2xl max-h-96">
-            <View className="p-4 border-b border-gray-200">
-              <Text className="text-lg font-bold text-center">Pilih Kategori</Text>
+            <View className="p-4 border-b border-border">
+              <Text className="text-lg font-bold text-text-dark text-center">Pilih Kategori</Text>
             </View>
             <FlatList
               data={categories || []}
               keyExtractor={(item) => String(item.id)}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  className={`px-6 py-4 border-b border-gray-100 ${item.id === categoryId ? 'bg-blue-50' : ''}`}
+                  className={`px-6 py-4 border-b border-border ${item.id === categoryId ? 'bg-blue-50' : ''}`}
                   onPress={() => {
                     setCategoryId(item.id)
                     setShowCategoryPicker(false)
                   }}
                 >
-                  <Text className={`text-base ${item.id === categoryId ? 'text-blue-600 font-semibold' : 'text-gray-900'}`}>
+                  <Text className={`text-base ${item.id === categoryId ? 'text-primary font-semibold' : 'text-text-dark'}`}>
                     {item.name}
                   </Text>
                 </TouchableOpacity>
@@ -79,18 +79,16 @@ export default function ProductForm({ initial, onSubmit, loading, error }: Produ
         </View>
       </Modal>
 
-      <Text className="text-sm font-medium text-gray-700 mb-1">Harga (Rp)</Text>
-      <TextInput
-        className="border border-gray-300 rounded-lg px-4 py-3 text-base mb-4"
+      <Input
+        label="Harga (Rp)"
         placeholder="0"
         keyboardType="numeric"
         value={price}
         onChangeText={setPrice}
       />
 
-      <Text className="text-sm font-medium text-gray-700 mb-1">Stok</Text>
-      <TextInput
-        className="border border-gray-300 rounded-lg px-4 py-3 text-base mb-6"
+      <Input
+        label="Stok"
         placeholder="0"
         keyboardType="numeric"
         value={stock}
@@ -98,16 +96,16 @@ export default function ProductForm({ initial, onSubmit, loading, error }: Produ
       />
 
       {error && (
-        <View className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+        <View className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
           <Text className="text-red-700 text-sm">{error}</Text>
         </View>
       )}
 
       <Button title="Simpan" onPress={handleSubmit} loading={loading} disabled={!name.trim() || !price || loading} />
 
-      <TouchableOpacity className="mt-4 py-3 items-center" onPress={() => router.back()} disabled={loading}>
-        <Text className="text-gray-500 text-sm font-medium">Batal</Text>
+      <TouchableOpacity className="mt-4 py-3 items-center mb-6" onPress={() => router.back()} disabled={loading}>
+        <Text className="text-text-light text-sm font-medium">Batal</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   )
 }
