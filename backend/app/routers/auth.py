@@ -68,3 +68,18 @@ async def create_token(body: TokenCreateRequest, db: AsyncSession = Depends(get_
 @router.get("/user", response_model=UserResponse)
 async def get_user(user: User = Depends(get_current_user)):
     return user
+
+
+@router.delete("/tokens", status_code=204)
+async def logout(
+    authorization: str | None = Header(None),
+    db: AsyncSession = Depends(get_db),
+):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Missing or invalid Authorization header")
+    token_key = authorization[7:]
+    result = await db.execute(select(Token).where(Token.token == token_key))
+    token = result.scalar_one_or_none()
+    if token:
+        await db.delete(token)
+        await db.commit()

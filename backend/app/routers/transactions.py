@@ -47,6 +47,7 @@ async def checkout(body: TransactionCreate, db: AsyncSession = Depends(get_db)):
         txn = Transaction(
             user_id=1,
             total_amount=total,
+            payment_method=body.payment_method,
             status="completed",
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
@@ -71,6 +72,7 @@ async def checkout(body: TransactionCreate, db: AsyncSession = Depends(get_db)):
         id=txn.id,
         user_id=txn.user_id,
         total_amount=txn.total_amount,
+        payment_method=txn.payment_method,
         status=txn.status,
         created_at=txn.created_at,
         items=[
@@ -142,6 +144,7 @@ async def get_transaction(transaction_id: int, db: AsyncSession = Depends(get_db
         id=txn.id,
         user_id=txn.user_id,
         total_amount=txn.total_amount,
+        payment_method=txn.payment_method,
         status=txn.status,
         created_at=txn.created_at,
         items=[
@@ -156,3 +159,33 @@ async def get_transaction(transaction_id: int, db: AsyncSession = Depends(get_db
             for i in txn.items
         ],
     )
+
+
+@router.get("/{transaction_id}/receipt")
+async def get_receipt(transaction_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Transaction)
+        .options(
+            selectinload(Transaction.items).selectinload(TransactionItem.product)
+        )
+        .where(Transaction.id == transaction_id)
+    )
+    txn = result.scalar_one_or_none()
+    if not txn:
+        raise HTTPException(404, "Transaction not found")
+    return {
+        "transaction_id": txn.id,
+        "total_amount": txn.total_amount,
+        "payment_method": txn.payment_method,
+        "status": txn.status,
+        "created_at": txn.created_at.isoformat(),
+        "items": [
+            {
+                "name": i.product.name,
+                "quantity": i.quantity,
+                "price": i.price_at_moment,
+                "subtotal": i.subtotal,
+            }
+            for i in txn.items
+        ],
+    }

@@ -13,6 +13,7 @@ class Transaction(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     total_amount: Mapped[float] = mapped_column(Float)
+    payment_method: Mapped[str] = mapped_column(String(50), default="tunai")
     status: Mapped[str] = mapped_column(String(50), default="completed")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

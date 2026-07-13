@@ -22,6 +22,7 @@ def _response(p: Product) -> ProductResponse:
         name=p.name,
         price=p.price,
         stock=p.stock,
+        image_url=p.image_url,
         created_at=p.created_at,
         updated_at=p.updated_at,
         category=CategoryInfo(id=p.category.id, name=p.category.name),
