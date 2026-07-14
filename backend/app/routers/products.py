@@ -55,7 +55,7 @@ async def list_products(
     stmt = stmt.order_by(Product.created_at.desc())
     result = await db.execute(stmt)
     return JSONResponse(
-        content=[p.model_dump(mode="json") for p in result.scalars().all()],
+        content=[_response(p).model_dump(mode="json") for p in result.scalars().all()],
         headers={"Cache-Control": "public, max-age=60"},
     )
 
