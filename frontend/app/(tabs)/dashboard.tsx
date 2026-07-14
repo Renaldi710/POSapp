@@ -67,16 +67,16 @@ export default function DashboardScreen() {
 
             <View className="bg-white rounded-xl border border-border p-4 mb-4">
               <Text className="text-sm font-semibold text-text-dark mb-3">Tren Penjualan 7 Hari</Text>
-              <View className="flex-row items-end gap-2 h-24">
+              <View className="flex-row items-end gap-2" style={{ height: 140 }}>
                 {DAYS.map((day, i) => {
-                  const h = 30 + Math.random() * 60
+                  const h = 30 + Math.random() * 50
                   return (
-                    <View key={day} className="flex-1 items-center gap-1">
+                    <View key={day} className="flex-1 items-center">
                       <View
                         style={{ height: h, backgroundColor: i === 6 ? '#004AC6' : '#93C5FD', borderTopLeftRadius: 4, borderTopRightRadius: 4 }}
                         className="w-full"
                       />
-                      <Text className="text-[10px] text-text-light">{day}</Text>
+                      <Text className="text-[10px] text-text-light mt-1">{day}</Text>
                     </View>
                   )
                 })}

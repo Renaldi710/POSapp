@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { View, TextInput, TouchableOpacity, Text, ScrollView } from 'react-native'
 import { Search, Plus, Package, AlertTriangle, XCircle, TrendingUp } from 'lucide-react-native'
 import { router } from 'expo-router'
+import { useAuthStore } from '../../src/features/auth/store/useAuthStore'
 import { useInventory } from '../../src/features/inventory/hooks/useInventory'
 import DataTable from '../../src/components/ui/DataTable'
 import Badge from '../../src/components/ui/Badge'
@@ -13,6 +14,8 @@ import type { Column } from '../../src/components/ui/DataTable'
 import ScreenLayout from '../../src/components/layout/ScreenLayout'
 
 export default function InventarisScreen() {
+  const user = useAuthStore((s) => s.user)
+  const isAdmin = user?.role === 'admin'
   const [search, setSearch] = useState('')
   const [filterKategori, setFilterKategori] = useState('')
   const { data: products, isLoading } = useInventory(search)
@@ -52,14 +55,14 @@ export default function InventarisScreen() {
     },
     { key: 'buy_price', label: 'Harga Beli', flex: 1, render: (item) => <Text className="text-sm text-text-dark">{(item as any).buy_price ? formatRupiah((item as any).buy_price) : '-'}</Text> },
     { key: 'price', label: 'Harga Jual', flex: 1, render: (item) => <Text className="text-sm text-text-dark">{formatRupiah(item.price)}</Text> },
-    {
-      key: 'actions', label: 'Aksi', flex: 0.8,
-      render: (item) => (
+    ...(isAdmin ? [{
+      key: 'actions' as const, label: 'Aksi', flex: 0.8,
+      render: (item: Product) => (
         <TouchableOpacity onPress={() => router.push(`/product/${item.id}`)}>
           <Text className="text-primary text-sm font-medium">Edit</Text>
         </TouchableOpacity>
       ),
-    },
+    }] : []),
   ]
 
   const totalSKU = products?.length || 0
@@ -81,9 +84,11 @@ export default function InventarisScreen() {
               onChangeText={setSearch}
             />
           </View>
-          <TouchableOpacity className="bg-primary px-4 py-2.5 rounded-xl" onPress={() => router.push('/product/create')}>
-            <Text className="text-white font-medium text-sm">+ Tambah Baru</Text>
-          </TouchableOpacity>
+          {isAdmin && (
+            <TouchableOpacity className="bg-primary px-4 py-2.5 rounded-xl" onPress={() => router.push('/product/create')}>
+              <Text className="text-white font-medium text-sm">+ Tambah Baru</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View className="flex-row gap-3 mb-4">

@@ -6,7 +6,7 @@ import { formatRupiah } from '../../../utils/currency'
 interface PaymentDialogProps {
   visible: boolean
   totalAmount: number
-  onConfirm: (data: { metode: string; uangDiterima: number; cetakStruk: boolean }) => void
+  onConfirm: (data: { metode: string; uangDiterima: number; cetakStruk: boolean; cetakInvoice: boolean }) => void
   onCancel: () => void
   loading?: boolean
   errorMessage?: string | null
@@ -24,6 +24,7 @@ export default function PaymentDialog({ visible, totalAmount, onConfirm, onCance
   const [metode, setMetode] = useState('tunai')
   const [uangDiterima, setUangDiterima] = useState('')
   const [cetakStruk, setCetakStruk] = useState(true)
+  const [cetakInvoice, setCetakInvoice] = useState(true)
 
   const diterima = Number(uangDiterima) || 0
   const kembalian = diterima - totalAmount
@@ -32,13 +33,14 @@ export default function PaymentDialog({ visible, totalAmount, onConfirm, onCance
 
   const handleConfirm = () => {
     if (!canConfirm) return
-    onConfirm({ metode, uangDiterima: metode === 'tunai' ? diterima : totalAmount, cetakStruk })
+    onConfirm({ metode, uangDiterima: metode === 'tunai' ? diterima : totalAmount, cetakStruk, cetakInvoice })
   }
 
   const handleClose = () => {
     setMetode('tunai')
     setUangDiterima('')
     setCetakStruk(true)
+    setCetakInvoice(true)
     onCancel()
   }
 
@@ -121,11 +123,24 @@ export default function PaymentDialog({ visible, totalAmount, onConfirm, onCance
               </View>
             )}
 
-            <View className="flex-row items-center justify-between mb-6">
+            <View className="flex-row items-center justify-between mb-4">
               <Text className="text-sm font-medium text-text-dark">Cetak Struk</Text>
               <Switch
                 value={cetakStruk}
                 onValueChange={setCetakStruk}
+                trackColor={{ false: '#C3C6D7', true: '#2563EB' }}
+                thumbColor="white"
+              />
+            </View>
+
+            <View className="flex-row items-center justify-between mb-6">
+              <View>
+                <Text className="text-sm font-medium text-text-dark">Cetak Invoice</Text>
+                <Text className="text-xs text-text-light">Format PDF</Text>
+              </View>
+              <Switch
+                value={cetakInvoice}
+                onValueChange={setCetakInvoice}
                 trackColor={{ false: '#C3C6D7', true: '#2563EB' }}
                 thumbColor="white"
               />

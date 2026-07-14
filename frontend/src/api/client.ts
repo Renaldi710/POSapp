@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { getToken } from '../lib/storage'
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://backend-gold-sigma-21.vercel.app'
+
 const client = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: API_URL,
   headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
 })
 
