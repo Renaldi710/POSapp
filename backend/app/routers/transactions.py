@@ -1,6 +1,7 @@
 from datetime import datetime, date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -90,7 +91,7 @@ async def checkout(body: TransactionCreate, db: AsyncSession = Depends(get_db), 
     )
 
 
-@router.get("")
+@router.get("", response_model_exclude_none=True)
 async def list_transactions(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -99,7 +100,13 @@ async def list_transactions(
     user_id: int | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(Transaction)
+    stmt = (
+        select(Transaction)
+        .options(selectinload(Transaction.items))
+        .order_by(Transaction.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
     count_stmt = select(func.count(Transaction.id))
 
     if user_id is not None:
@@ -115,17 +122,16 @@ async def list_transactions(
     total_result = await db.execute(count_stmt)
     total = total_result.scalar() or 0
 
-    stmt = stmt.order_by(Transaction.created_at.desc())
-    stmt = stmt.offset((page - 1) * per_page).limit(per_page)
     result = await db.execute(stmt)
     transactions = result.scalars().all()
 
-    return {
+    payload = {
         "data": [TransactionListItem.model_validate(t) for t in transactions],
         "total": total,
         "page": page,
         "per_page": per_page,
     }
+    return JSONResponse(content=payload, headers={"Cache-Control": "public, max-age=30"})
 
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)

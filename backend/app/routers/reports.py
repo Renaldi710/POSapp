@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,16 +44,19 @@ async def daily_report(
         .limit(10)
     )
 
-    return {
-        "date": date_str.isoformat(),
-        "total_transactions": total_transactions,
-        "total_revenue": total_revenue,
-        "top_products": [
-            {
-                "product_id": r.product_id,
-                "total_quantity": r.total_qty,
-                "total_subtotal": float(r.total_subtotal),
-            }
-            for r in top_items.all()
-        ],
-    }
+    return JSONResponse(
+        content={
+            "date": date_str.isoformat(),
+            "total_transactions": total_transactions,
+            "total_revenue": total_revenue,
+            "top_products": [
+                {
+                    "product_id": r.product_id,
+                    "total_quantity": r.total_qty,
+                    "total_subtotal": float(r.total_subtotal),
+                }
+                for r in top_items.all()
+            ],
+        },
+        headers={"Cache-Control": "public, max-age=300"},
+    )

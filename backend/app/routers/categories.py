@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,10 +27,13 @@ class CategoryResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-@router.get("", response_model=list[CategoryResponse])
+@router.get("", response_model_exclude_none=True)
 async def list_categories(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Category).order_by(Category.name))
-    return result.scalars().all()
+    return JSONResponse(
+        content=[c.model_dump(mode="json") for c in result.scalars().all()],
+        headers={"Cache-Control": "public, max-age=300"},
+    )
 
 
 @router.post("", response_model=CategoryResponse, status_code=201)

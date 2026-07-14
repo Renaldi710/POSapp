@@ -2,6 +2,7 @@ from datetime import datetime
 from secrets import token_hex
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,7 +39,7 @@ async def _get_product(db: AsyncSession, product_id: int) -> Product | None:
     return result.scalar_one_or_none()
 
 
-@router.get("", response_model=list[ProductResponse])
+@router.get("", response_model_exclude_none=True)
 async def list_products(
     q: str | None = Query(None, min_length=1),
     category_id: int | None = None,
@@ -53,7 +54,10 @@ async def list_products(
         )
     stmt = stmt.order_by(Product.created_at.desc())
     result = await db.execute(stmt)
-    return [_response(p) for p in result.scalars().all()]
+    return JSONResponse(
+        content=[p.model_dump(mode="json") for p in result.scalars().all()],
+        headers={"Cache-Control": "public, max-age=60"},
+    )
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
@@ -64,7 +68,7 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     return _response(p)
 
 
-@router.post("", response_model=ProductResponse, status_code=201)
+@router.post("", response_model=ProductResponse, status_code=201, response_model_exclude_none=True)
 async def create_product(body: ProductCreate, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
     cat = await db.get(Category, body.category_id)
     if not cat:
