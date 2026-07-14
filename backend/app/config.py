@@ -1,3 +1,4 @@
+import os
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from pydantic_settings import BaseSettings
@@ -20,8 +21,8 @@ class Settings(BaseSettings):
     def db_url(self) -> str:
         url = self.database_url
         if not url:
-            if self.is_debug:
-                return "sqlite+aiosqlite:///./database.sqlite"
+            if self.is_debug and not os.environ.get("VERCEL"):
+                return "sqlite+aiosqlite:////tmp/database.sqlite"
             raise RuntimeError("DATABASE_URL is required in production")
         if ":6543" in url:
             raise RuntimeError(
