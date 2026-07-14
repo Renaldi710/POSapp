@@ -31,7 +31,7 @@ class CategoryResponse(BaseModel):
 async def list_categories(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Category).order_by(Category.name))
     return JSONResponse(
-        content=[c.model_dump(mode="json") for c in result.scalars().all()],
+        content=[CategoryResponse.model_validate(c).model_dump(mode="json") for c in result.scalars().all()],
         headers={"Cache-Control": "public, max-age=300"},
     )
 
