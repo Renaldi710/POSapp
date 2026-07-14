@@ -127,7 +127,7 @@ async def list_transactions(
     transactions = result.scalars().all()
 
     payload = {
-        "data": [TransactionListItem.model_validate(t) for t in transactions],
+        "data": [TransactionListItem.model_validate(t).model_dump(mode="json") for t in transactions],
         "total": total,
         "page": page,
         "per_page": per_page,
