@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { View, TextInput, TouchableOpacity, Text, ScrollView } from 'react-native'
 import { Search, Plus, Package, AlertTriangle, XCircle, TrendingUp } from 'lucide-react-native'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useAuthStore } from '../../src/features/auth/store/useAuthStore'
 import { useInventory } from '../../src/features/inventory/hooks/useInventory'
 import DataTable from '../../src/components/ui/DataTable'
@@ -19,6 +19,7 @@ export default function InventarisScreen() {
   const [search, setSearch] = useState('')
   const [filterKategori, setFilterKategori] = useState('')
   const { data: products, isLoading } = useInventory(search)
+  const { highlight } = useLocalSearchParams<{ highlight?: string }>()
 
   const stockColor = (stock: number) => {
     if (stock === 0) return '#EF4444'
@@ -108,7 +109,7 @@ export default function InventarisScreen() {
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ minWidth: 600 }}>
-            <DataTable columns={columns} data={products || []} keyExtractor={(item) => String(item.id)} onRowPress={handleRowPress} />
+            <DataTable columns={columns} data={products || []} keyExtractor={(item) => String(item.id)} onRowPress={handleRowPress} highlightedKey={highlight} />
           </View>
         </ScrollView>
       )}
