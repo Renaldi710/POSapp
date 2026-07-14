@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity, Alert } from 'react-native'
 import { Menu, Search, Bell } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
 import { useAuthStore } from '../../features/auth/store/useAuthStore'
@@ -28,14 +28,14 @@ export default function TopHeader({ title, showSearch, isTablet }: TopHeaderProp
           <Search size={20} color="#737686" />
         </TouchableOpacity>
       )}
-      <TouchableOpacity className="mr-2">
+      <TouchableOpacity className="mr-2" onPress={() => Alert.alert('Info', 'Fitur notifikasi belum tersedia')}>
         <Bell size={20} color="#737686" />
       </TouchableOpacity>
-      <View className="w-8 h-8 rounded-full bg-primary items-center justify-center">
+      <TouchableOpacity onPress={() => router.push('/(tabs)/user-management')} className="w-8 h-8 rounded-full bg-primary items-center justify-center">
         <Text className="text-white text-sm font-bold">
           {user?.name?.charAt(0)?.toUpperCase() || 'U'}
         </Text>
-      </View>
+      </TouchableOpacity>
     </View>
   )
 }
