@@ -1,5 +1,6 @@
 import { Redirect, Stack } from 'expo-router'
-import { View, useWindowDimensions } from 'react-native'
+import { View, useWindowDimensions, StatusBar } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuthStore } from '../../src/features/auth/store/useAuthStore'
 import Sidebar from '../../src/components/layout/Sidebar'
 import SidebarOverlay from '../../src/components/layout/SidebarOverlay'
@@ -14,11 +15,14 @@ export default function TabLayout() {
   if (!isAuthenticated) return <Redirect href="/(auth)/login" />
 
   return (
-    <View className="flex-1 flex-row bg-bg-page">
-      {isTablet && <Sidebar />}
-      <View className="flex-1">
-        <Stack screenOptions={{ headerShown: false }} />
-      </View>
+    <View className="flex-1 bg-bg-page">
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <SafeAreaView edges={['top']} className="flex-1 flex-row">
+        {isTablet && <Sidebar />}
+        <View className="flex-1">
+          <Stack screenOptions={{ headerShown: false }} />
+        </View>
+      </SafeAreaView>
       {!isTablet && <SidebarOverlay />}
     </View>
   )

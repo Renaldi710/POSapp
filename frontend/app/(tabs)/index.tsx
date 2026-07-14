@@ -30,9 +30,18 @@ export default function KasirScreen() {
   const checkout = useCheckout()
 
   const allCategories = [ALL_CATEGORY, ...(categories || [])]
-  const filteredProducts = selectedCategory === 0
+  const filteredProducts = (selectedCategory === 0
     ? products
     : products?.filter((p) => p.category_id === selectedCategory)
+  )?.sort((a, b) => {
+    if (!search) return 0
+    const q = search.toLowerCase()
+    const aStarts = a.name.toLowerCase().startsWith(q)
+    const bStarts = b.name.toLowerCase().startsWith(q)
+    if (aStarts && !bStarts) return -1
+    if (!aStarts && bStarts) return 1
+    return 0
+  })
 
   const handleAdd = useCallback(
     (product: Product) => addItem(product.id, product.name, product.price),
@@ -49,7 +58,7 @@ export default function KasirScreen() {
   }, [isTablet])
 
   const handlePaymentConfirm = useCallback(
-    (data: { metode: string; uangDiterima: number; cetakStruk: boolean }) => {
+    (data: { metode: string; uangDiterima: number; cetakStruk: boolean; cetakInvoice: boolean }) => {
       checkout.mutate(data, {
         onSuccess: () => setShowPayment(false),
       })

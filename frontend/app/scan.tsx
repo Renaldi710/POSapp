@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity, useWindowDimensions } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { router } from 'expo-router'
 import client from '../src/api/client'
@@ -8,6 +8,7 @@ import { useCartStore } from '../src/features/cart/store/useCartStore'
 import type { Product } from '../src/api/types'
 
 export default function ScanScreen() {
+  const { width, height } = useWindowDimensions()
   const [permission, requestPermission] = useCameraPermissions()
   const [scanning, setScanning] = useState(true)
   const [error, setError] = useState('')
@@ -47,7 +48,7 @@ export default function ScanScreen() {
   return (
     <View className="flex-1 bg-black">
       <CameraView
-        className="flex-1"
+        style={{ width, height }}
         facing="back"
         barcodeScannerSettings={{ barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39'] }}
         onBarcodeScanned={handleBarcodeScanned}

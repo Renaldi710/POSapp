@@ -19,7 +19,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.pos.mobile"
+      "package": "com.pos.mobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -29,6 +33,12 @@
       "expo-router",
       "expo-secure-store",
       "expo-camera"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4afb4622-53ea-4acb-86d2-d6054e9a8b7d"
+      }
+    }
   }
 }
