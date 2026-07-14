@@ -22,44 +22,45 @@ router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
 @router.post("", response_model=TransactionResponse, status_code=201)
 async def checkout(body: TransactionCreate, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
-    async with db.begin():
-        items_data = []
-        total = 0.0
+    items_data = []
+    total = 0.0
 
-        for item in body.items:
-            product = await db.get(Product, item.product_id)
-            if not product:
-                raise HTTPException(422, f"Product {item.product_id} not found")
-            if product.stock < item.quantity:
-                raise HTTPException(
-                    422, f"Insufficient stock for '{product.name}': have {product.stock}, need {item.quantity}"
-                )
+    for item in body.items:
+        product = await db.get(Product, item.product_id)
+        if not product:
+            raise HTTPException(422, f"Product {item.product_id} not found")
+        if product.stock < item.quantity:
+            raise HTTPException(
+                422, f"Insufficient stock for '{product.name}': have {product.stock}, need {item.quantity}"
+            )
 
-            price = product.price
-            subtotal = price * item.quantity
-            total += subtotal
+        price = product.price
+        subtotal = price * item.quantity
+        total += subtotal
 
-            product.stock -= item.quantity
-            items_data.append({
-                "product_id": item.product_id,
-                "quantity": item.quantity,
-                "price_at_moment": price,
-                "subtotal": subtotal,
-            })
+        product.stock -= item.quantity
+        items_data.append({
+            "product_id": item.product_id,
+            "quantity": item.quantity,
+            "price_at_moment": price,
+            "subtotal": subtotal,
+        })
 
-        txn = Transaction(
-            user_id=user.id,
-            total_amount=total,
-            payment_method=body.payment_method,
-            status="completed",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
-        )
-        db.add(txn)
-        await db.flush()
+    txn = Transaction(
+        user_id=user.id,
+        total_amount=total,
+        payment_method=body.payment_method,
+        status="completed",
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    db.add(txn)
+    await db.flush()
 
-        for d in items_data:
-            db.add(TransactionItem(transaction_id=txn.id, **d))
+    for d in items_data:
+        db.add(TransactionItem(transaction_id=txn.id, **d))
+
+    await db.commit()
 
     result = await db.execute(
         select(Transaction)
