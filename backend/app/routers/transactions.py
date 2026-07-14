@@ -60,7 +60,6 @@ async def checkout(body: TransactionCreate, db: AsyncSession = Depends(get_db), 
         for d in items_data:
             db.add(TransactionItem(transaction_id=txn.id, **d))
 
-    await db.refresh(txn)
     result = await db.execute(
         select(Transaction)
         .options(
