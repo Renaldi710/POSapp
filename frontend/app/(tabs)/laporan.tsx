@@ -6,6 +6,7 @@ import StatCard from '../../src/components/ui/StatCard'
 import ScreenLayout from '../../src/components/layout/ScreenLayout'
 import ProgressBar from '../../src/components/layout/ProgressBar'
 import { formatRupiah } from '../../src/utils/currency'
+import { downloadTransactionsCSV } from '../../src/lib/export'
 import type { DailyReport } from '../../src/api/types'
 
 function todayString() {
@@ -56,7 +57,7 @@ export default function LaporanScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          <TouchableOpacity className="flex-row items-center gap-1.5 border border-border px-3 py-1.5 rounded-xl">
+          <TouchableOpacity className="flex-row items-center gap-1.5 border border-border px-3 py-1.5 rounded-xl" onPress={() => downloadTransactionsCSV({ date_from: date, date_to: date })}>
             <Download size={16} color="#434655" />
             <Text className="text-sm text-text-medium font-medium">Ekspor</Text>
           </TouchableOpacity>

@@ -1,14 +1,16 @@
 import { useState, useCallback } from 'react'
-import { View, Text, TextInput, TouchableOpacity, Modal, FlatList, ScrollView } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Modal, FlatList, ScrollView, Image, Alert } from 'react-native'
+import { Camera, Image as ImageIcon, Trash2 } from 'lucide-react-native'
 import { router } from 'expo-router'
 import { useCategories } from '../../categories/hooks/useCategories'
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
+import { pickFromCamera, pickFromGallery, uriToBase64 } from '../../../lib/image'
 import type { Product } from '../../../api/types'
 
 interface ProductFormProps {
   initial?: Product
-  onSubmit: (data: { category_id: number; name: string; price: number; stock?: number }) => void
+  onSubmit: (data: { category_id: number; name: string; price: number; stock?: number; image_url?: string }) => void
   loading: boolean
   error: string | null
 }
@@ -19,9 +21,26 @@ export default function ProductForm({ initial, onSubmit, loading, error }: Produ
   const [stock, setStock] = useState(initial?.stock !== undefined ? String(initial.stock) : '')
   const [categoryId, setCategoryId] = useState<number>(initial?.category_id || 1)
   const [showCategoryPicker, setShowCategoryPicker] = useState(false)
+  const [imageBase64, setImageBase64] = useState<string | null>(null)
+  const [imageLoading, setImageLoading] = useState(false)
   const { data: categories } = useCategories()
 
   const selectedCategory = categories?.find((c) => c.id === categoryId)
+
+  const handlePickImage = useCallback(async (source: 'camera' | 'gallery') => {
+    setImageLoading(true)
+    try {
+      const uri = source === 'camera' ? await pickFromCamera() : await pickFromGallery()
+      if (uri) {
+        const base64 = await uriToBase64(uri)
+        setImageBase64(base64)
+      }
+    } catch {
+      Alert.alert('Gagal', 'Tidak dapat mengakses kamera/galeri')
+    } finally {
+      setImageLoading(false)
+    }
+  }, [])
 
   const handleSubmit = useCallback(() => {
     if (!name.trim() || !price) return
@@ -30,11 +49,49 @@ export default function ProductForm({ initial, onSubmit, loading, error }: Produ
       name: name.trim(),
       price: Number(price),
       stock: stock ? Number(stock) : undefined,
+      image_url: imageBase64 || initial?.image_url || undefined,
     })
-  }, [name, price, stock, categoryId, onSubmit])
+  }, [name, price, stock, categoryId, imageBase64, initial, onSubmit])
+
+  const previewUri = imageBase64 || initial?.image_url || null
 
   return (
     <ScrollView className="flex-1 bg-bg-page px-4 pt-4">
+      <View className="mb-4">
+        <Text className="text-sm font-medium text-text-dark mb-2">Foto Produk</Text>
+        {previewUri ? (
+          <View className="relative">
+            <Image source={{ uri: previewUri }} className="w-full h-40 rounded-xl bg-bg-search" resizeMode="cover" />
+            <TouchableOpacity
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1.5"
+              onPress={() => setImageBase64(null)}
+            >
+              <Trash2 size={18} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View className="flex-row gap-3">
+            <TouchableOpacity
+              className="flex-1 bg-bg-search border border-border rounded-xl py-8 items-center"
+              onPress={() => handlePickImage('camera')}
+              disabled={imageLoading}
+            >
+              <Camera size={28} color="#737686" />
+              <Text className="text-xs text-text-light mt-2 font-medium">Ambil Foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 bg-bg-search border border-border rounded-xl py-8 items-center"
+              onPress={() => handlePickImage('gallery')}
+              disabled={imageLoading}
+            >
+              <ImageIcon size={28} color="#737686" />
+              <Text className="text-xs text-text-light mt-2 font-medium">Pilih Galeri</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {imageLoading && <Text className="text-xs text-text-light mt-1 text-center">Memproses gambar...</Text>}
+      </View>
+
       <Input
         label="Nama Produk"
         placeholder="Nama produk"

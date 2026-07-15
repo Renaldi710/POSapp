@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, Image, TouchableOpacity } from 'react-native'
 import { Package } from 'lucide-react-native'
 import { formatRupiah } from '../../utils/currency'
 import type { Product } from '../../api/types'
@@ -11,8 +11,12 @@ interface ProductCardProps {
 export default function ProductCard({ product, onAdd }: ProductCardProps) {
   return (
     <View className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
-      <View className="h-24 bg-bg-search items-center justify-center">
-        <Package size={32} color="#737686" />
+      <View className="h-24 bg-bg-search items-center justify-center overflow-hidden">
+        {product.image_url ? (
+          <Image source={{ uri: product.image_url }} className="w-full h-full" resizeMode="cover" />
+        ) : (
+          <Package size={32} color="#737686" />
+        )}
       </View>
       <View className="p-3">
         <Text className="text-sm font-semibold text-text-dark" numberOfLines={1}>{product.name}</Text>
