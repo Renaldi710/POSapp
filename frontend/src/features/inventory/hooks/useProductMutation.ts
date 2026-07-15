@@ -15,7 +15,7 @@ function getMutationError(err: unknown): string | null {
 export function useCreateProduct() {
   const queryClient = useQueryClient()
   const mutation = useMutation({
-    mutationFn: (data: { category_id: number; name: string; price: number; stock?: number }) =>
+    mutationFn: (data: { category_id: number; name: string; price: number; stock?: number; image_url?: string }) =>
       client.post<Product>(ENDPOINTS.PRODUCTS.CREATE, data).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -27,7 +27,7 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const queryClient = useQueryClient()
   const mutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<{ category_id: number; name: string; price: number; stock: number }> }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<{ category_id: number; name: string; price: number; stock: number; image_url?: string }> }) =>
       client.put<Product>(ENDPOINTS.PRODUCTS.UPDATE(id), data).then((r) => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })

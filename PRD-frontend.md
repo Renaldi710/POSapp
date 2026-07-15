@@ -107,3 +107,54 @@ POST /api/tokens/create
   "password": "password",
   "device_name": "mobile-app"
 }
+
+---
+
+## New Features (v2)
+
+### 1. Export Transaksi CSV
+**User Flow:**
+1. Buka Laporan → tap "Ekspor"
+2. System: fetch transaksi → generate CSV → open share sheet
+3. User: Save to Files / Share via WhatsApp / Email
+
+**File:** `src/lib/export.ts` — `downloadTransactionsCSV(date_from, date_to)`
+**Deps:** `expo-file-system` + `expo-sharing` (existing)
+**Backend:** `GET /api/transactions/export?date_from=&date_to=` → return CSV
+
+---
+
+### 2. Image Produk (Camera + Kompresi Otomatis)
+**User Flow:**
+1. Tambah/Edit produk → lihat section "Foto Produk"
+2. Tap "Ambil Foto" → buka kamera → ambil foto
+3. Atau tap "Pilih Galeri" → pilih dari gallery
+4. System: kompres otomatis (800px, quality 0.5 → ~50-100KB)
+5. Konversi ke base64 → kirim ke API sebagai `image_url`
+6. Tampil di card produk & detail produk
+
+**File:** `src/lib/image.ts` — `pickFromCamera()`, `pickFromGallery()`, `compressImage()`, `uriToBase64()`
+**Component:** `src/features/inventory/components/ProductForm.tsx` — image section + preview
+**Deps:** `expo-image-picker` + `expo-image-manipulator`
+**Backend:** Field `image_url` di Product model/schema/response
+
+---
+
+### 3. Import CSV Produk (Admin Only)
+**User Flow:**
+1. Buka Inventaris (admin) → tap "Import CSV"
+2. System file picker → pilih file .csv
+3. Upload via `POST /api/products/import`
+4. Alert: "Berhasil: 10, Skipped: 2, Error: ..."
+
+**File:** `src/features/inventory/hooks/useImportProducts.ts` — `useImportProducts()`
+**Deps:** `expo-document-picker`
+**Backend:** `POST /api/products/import` — multipart file, return `{ created, skipped, errors }`
+
+---
+
+### 4. Efisiensi APK
+- Hapus `expo-location` (dead code) → -~300KB native
+- Enable `hermesBytecode: true` di `eas.json` → JS bundle ~40% lebih kecil
+- Hapus `lightningcss-linux-x64-gnu` (platform mismatch, dev dependency)
+- Hapus `src/lib/location.ts`

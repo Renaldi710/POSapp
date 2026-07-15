@@ -1,3 +1,4 @@
+import { Alert } from 'react-native'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import client from '../../../api/client'
@@ -25,19 +26,11 @@ export function useLogin() {
       }
     },
     onError: (err) => {
-      // ponytail: backend belum punya endpoint auth — simulasi login untuk development
-      if (err.response?.status === 404) {
-        persistToken('dev-token')
-        useAuthStore.getState().setToken('dev-token')
-        useAuthStore.getState().setUser({
-          id: 1,
-          name: 'Admin POS',
-          email: 'admin@pos.app',
-          role: 'admin',
-          created_at: new Date().toISOString(),
-        })
-        router.replace('/(tabs)/dashboard')
-      }
+      const msg =
+        (err.response?.data as { detail?: string })?.detail ||
+        (err.response?.data as { message?: string })?.message ||
+        'Gagal terhubung ke server. Periksa koneksi internet.'
+      Alert.alert('Login Gagal', msg)
     },
   })
 }

@@ -1,14 +1,22 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { useRouter, usePathname } from 'expo-router'
 import { useAuthStore } from '../../features/auth/store/useAuthStore'
 import { Home, FileText, BarChart3, Package, Users, LogOut, ShoppingBag } from 'lucide-react-native'
 
-const NAV_ITEMS = [
+const ADMIN_ITEMS = [
+  { label: 'Home', icon: Home, route: '/(tabs)' },
+  { label: 'Laporan', icon: FileText, route: '/(tabs)/laporan' },
+  { label: 'Dashboard', icon: BarChart3, route: '/(tabs)/dashboard' },
+  { label: 'Produk', icon: Package, route: '/(tabs)/inventaris' },
+  { label: 'Inventaris', icon: Package, route: '/(tabs)/inventaris' },
+  { label: 'User', icon: Users, route: '/(tabs)/user-management' },
+]
+
+const KASIR_ITEMS = [
   { label: 'Home', icon: Home, route: '/(tabs)' },
   { label: 'Laporan', icon: FileText, route: '/(tabs)/laporan' },
   { label: 'Dashboard', icon: BarChart3, route: '/(tabs)/dashboard' },
   { label: 'Inventaris', icon: Package, route: '/(tabs)/inventaris' },
-  { label: 'User', icon: Users, route: '/(tabs)/user-management' },
 ]
 
 export default function Sidebar() {
@@ -27,8 +35,10 @@ export default function Sidebar() {
     return pathname.startsWith(route)
   }
 
+  const navItems = user?.role === 'admin' ? ADMIN_ITEMS : KASIR_ITEMS
+
   return (
-    <View className="w-[280px] bg-white border-r border-border">
+    <View className="w-[280px] bg-white border-r border-border h-full">
       <View className="px-5 py-6 border-b border-border">
         <View className="flex-row items-center gap-3">
           <View className="w-10 h-10 rounded-xl bg-primary items-center justify-center">
@@ -43,8 +53,8 @@ export default function Sidebar() {
         </View>
       </View>
 
-      <View className="flex-1 px-3 pt-4">
-        {NAV_ITEMS.map((item) => {
+      <ScrollView className="flex-1 px-3 pt-4">
+        {navItems.map((item) => {
           const active = isActive(item.route)
           const Icon = item.icon
           return (
@@ -60,7 +70,7 @@ export default function Sidebar() {
             </TouchableOpacity>
           )
         })}
-      </View>
+      </ScrollView>
 
       <View className="px-3 pb-6 border-t border-border pt-4">
         <TouchableOpacity

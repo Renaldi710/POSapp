@@ -42,6 +42,7 @@ export interface Product {
   name: string
   price: number
   stock: number
+  image_url?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -84,6 +85,7 @@ export interface TransactionListResponse {
 export interface CreateTransactionPayload {
   items: { product_id: number; quantity: number }[]
   payment_method: string
+  uang_diterima: number
 }
 
 export interface DailyReport {

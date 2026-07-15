@@ -1,10 +1,9 @@
 import { View, Text, FlatList, TouchableOpacity } from 'react-native'
-import type { ReactElement } from 'react'
 
 export interface Column<T> {
   key: string
   label: string
-  render?: (item: T) => ReactElement
+  render?: (item: T) => React.ReactElement
   flex?: number
 }
 
@@ -13,9 +12,14 @@ interface DataTableProps<T> {
   data: T[]
   keyExtractor: (item: T) => string
   onRowPress?: (item: T) => void
+  highlightedKey?: string
 }
 
-export default function DataTable<T>({ columns, data, keyExtractor, onRowPress }: DataTableProps<T>) {
+export default function DataTable<T>({ columns, data, keyExtractor, onRowPress, highlightedKey }: DataTableProps<T>) {
+  const initialIndex = highlightedKey != null
+    ? data.findIndex((item) => keyExtractor(item) === highlightedKey)
+    : undefined
+
   return (
     <View>
       <View className="flex-row bg-bg-page border-b border-border px-3 py-2.5">
@@ -28,19 +32,24 @@ export default function DataTable<T>({ columns, data, keyExtractor, onRowPress }
       <FlatList
         data={data}
         keyExtractor={keyExtractor}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            className="flex-row items-center px-3 py-3 border-b border-border"
-            onPress={() => onRowPress?.(item)}
-            disabled={!onRowPress}
-          >
-            {columns.map((col) => (
-              <View key={col.key} style={{ flex: col.flex ?? 1 }}>
-                {col.render ? col.render(item) : <Text className="text-sm text-text-dark">{String((item as any)[col.key] ?? '')}</Text>}
-              </View>
-            ))}
-          </TouchableOpacity>
-        )}
+        initialScrollIndex={initialIndex}
+        onScrollToIndexFailed={() => {}}
+        renderItem={({ item }) => {
+          const highlighted = highlightedKey != null && keyExtractor(item) === highlightedKey
+          return (
+            <TouchableOpacity
+              className={`flex-row items-center px-3 py-3 border-b border-border${highlighted ? ' bg-blue-50' : ''}`}
+              onPress={() => onRowPress?.(item)}
+              disabled={!onRowPress}
+            >
+              {columns.map((col) => (
+                <View key={col.key} style={{ flex: col.flex ?? 1 }}>
+                  {col.render ? col.render(item) : <Text className="text-sm text-text-dark">{String((item as any)[col.key] ?? '')}</Text>}
+                </View>
+              ))}
+            </TouchableOpacity>
+          )
+        }}
       />
     </View>
   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native'
 import { useLocalSearchParams, Stack, router } from 'expo-router'
 import { ArrowLeft, Package } from 'lucide-react-native'
 import { useProduct } from '../../src/features/products/hooks/useProducts'
@@ -71,8 +71,14 @@ export default function ProductDetailScreen() {
         <View className="bg-white rounded-xl border border-border p-4 mb-4">
           <Text className="text-sm font-semibold text-text-dark mb-3">Item Information</Text>
           <View className="flex-row items-center gap-3 mb-3">
-            <View className="w-16 h-16 rounded-xl bg-bg-search items-center justify-center">
-              <Package size={28} color="#737686" />
+            <View className="w-16 h-16 rounded-xl overflow-hidden">
+              {product.image_url ? (
+                <Image source={{ uri: product.image_url }} className="w-full h-full" resizeMode="cover" />
+              ) : (
+                <View className="w-full h-full bg-bg-search items-center justify-center">
+                  <Package size={28} color="#737686" />
+                </View>
+              )}
             </View>
             <View className="flex-1">
               <Text className="text-sm text-text-light">Item Name</Text>

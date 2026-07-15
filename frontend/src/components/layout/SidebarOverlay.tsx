@@ -18,12 +18,12 @@ export default function SidebarOverlay() {
   if (!isOpen) return null
 
   return (
-    <View className="absolute inset-0 z-50 flex-row">
+    <View style={{ elevation: 50 }} className="absolute inset-0 z-50 flex-row">
       <TouchableWithoutFeedback onPress={close}>
         <View className="flex-1 bg-black/40" />
       </TouchableWithoutFeedback>
       <Animated.View
-        style={[{ transform: [{ translateX }] }]}
+        style={[{ transform: [{ translateX }], elevation: 60, width: 280 }]}
         className="absolute left-0 top-0 bottom-0"
       >
         <Sidebar />
