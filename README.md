@@ -11,7 +11,9 @@ Aplikasi **Point of Sale (POS)** untuk UMKM. Kelola penjualan, stok, dan laporan
 | **Icons** | lucide-react-native |
 | **Font** | Inter |
 | **PDF** | expo-print + expo-sharing |
-| **Build** | EAS Build (Android APK) |
+| **Images** | expo-image-picker + expo-image-manipulator (camera, compress, base64) |
+| **Files** | expo-file-system + expo-document-picker (export/import CSV) |
+| **Build** | EAS Build (Android APK, Hermes) |
 
 ## Struktur Proyek
 
@@ -48,12 +50,12 @@ POSapp/
 | **Login** | Auth Email + Password, card 480px, lucide icons, Inter font |
 | **POS / Kasir** | Product grid, kategori filter, cart panel responsive (tablet sidebar / phone overlay), search prefix sort |
 | **Dashboard** | 4 KPI cards, bar chart 7 hari, low‑stock products (real‑time from API), tap → inventaris with auto‑scroll |
-| **Laporan** | Period toggle (hari/minggu/bulan), payment breakdown, transaksi table, top produk |
-| **Inventaris** | 4 stat cards, stock progress bar, CRUD produk (admin) / view‑only (kasir), `?highlight=` param auto‑scrolls to row |
+| **Laporan** | Period toggle (hari/minggu/bulan), payment breakdown, transaksi table, top produk, **export CSV** |
+| **Inventaris** | 4 stat cards, stock progress bar, CRUD produk (admin) / view‑only (kasir), **Import CSV (admin)**, `?highlight=` param auto‑scrolls to row |
 | **User Management** | User table (mock data), security info cards, activity log |
-| **Product Detail** | Item info, stock control, quick stock mutation, mutation history |
-| **Product Create** | Form tambah produk (admin only) |
-| **Product Edit** | Form edit produk (admin only) |
+| **Product Detail** | Item info, **image**, stock control, quick stock mutation, mutation history |
+| **Product Create** | Form tambah produk (admin only) — **kamera/galeri + kompresi otomatis** |
+| **Product Edit** | Form edit produk (admin only) — **upload/replace image** |
 | **Scan** | Barcode scanner (QR, EAN, Code128, Code39) → add to cart |
 
 ## Role-Based Access
@@ -67,6 +69,26 @@ POSapp/
 | Inventaris | ✅ | ✅ |
 | User Management | ✅ | ❌ |
 | Tambah/Edit Produk | ✅ | ❌ (redirect) |
+
+## New Features (v2)
+
+### Export Transaksi CSV
+- Tombol **Ekspor** di Laporan → download CSV langsung ke share sheet
+- Filter otomatis berdasarkan date range yang dipilih
+
+### Image Produk (Camera + Kompresi)
+- "Ambil Foto" (kamera) / "Pilih Galeri" di form tambah/edit produk
+- Kompresi otomatis: 800px + quality 0.5 → ~50-100KB (`expo-image-manipulator`)
+- Disimpan sebagai base64 di field `image_url`
+
+### Import CSV (Admin Only)
+- Tombol "Import CSV" di Inventaris (admin only)
+- Pilih file CSV → upload → hasil (created/skipped/errors)
+
+### Efisiensi APK
+- Hapus `expo-location` (dead code)
+- Hermes bytecode enabled
+- **Ukuran APK turun ~300KB native + 40% JS bundle**
 
 ## Invoice PDF
 

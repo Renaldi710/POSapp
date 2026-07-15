@@ -2,7 +2,7 @@
 
 ## Stack
 
-| Layer | Teknologi |
+ | Layer | Teknologi |
 |-------|-----------|
 | Mobile | React Native (Expo SDK 57) + NativeWind (Tailwind CSS) |
 | Backend | FastAPI + SQLAlchemy 2.0 (async) |
@@ -12,6 +12,8 @@
 | Icons | lucide-react-native |
 | Font | Inter (@expo-google-fonts/inter) |
 | PDF | expo-print + expo-sharing |
+| Image | expo-image-picker + expo-image-manipulator (camera, kompresi, base64) |
+| File | expo-file-system + expo-document-picker (export CSV, import CSV) |
 
 ## Struktur
 
@@ -33,11 +35,11 @@ POSapp/
 │   │   │   ├── auth/            # useAuth, useAuthStore
 │   │   │   ├── cart/            # useCartStore, CartBar, CartPanel
 │   │   │   ├── products/        # useProducts, ProductCard
-│   │   │   ├── inventory/       # useInventory, useStockMutation, useProductMutation, ProductForm
+│   │   │   ├── inventory/       # useInventory, useStockMutation, useProductMutation, ProductForm, useImportProducts
 │   │   │   ├── transactions/    # useCheckout, useTransactions, PaymentDialog
 │   │   │   ├── users/           # useUsers (planned)
 │   │   │   └── reports/         # useReports
-│   │   └── lib/                 # printer.ts, invoice.ts, storage.ts, queryClient.ts
+│   │   └── lib/                 # printer.ts, invoice.ts, storage.ts, queryClient.ts, image.ts, export.ts
 │   └── design-system/posapp/    # Design tokens & rules (MASTER.md)
 ├── backend/                     # FastAPI
 │   └── app/
@@ -108,13 +110,13 @@ Backend live: https://backend-gold-sigma-21.vercel.app
 | Login | `/(auth)/login` | Auth Email + Password, card 480px, lucide icons |
 | POS/Kasir | `/(tabs)` | Product grid, filter kategori, cart panel responsive, search prefix sort, checkout |
 | Dashboard | `/(tabs)/dashboard` | 4 stat cards, bar chart 7 hari, low‑stock products real‑time (useProducts), tap → inventaris with highlight |
-| Laporan | `/(tabs)/laporan` | Period toggle (hari/minggu/bulan), payment breakdown, transaksi table, top produk |
-| Inventaris | `/(tabs)/inventaris` | 4 stat cards, stock progress bar, CRUD produk (admin) / view‑only (kasir), `?highlight=` auto‑scroll + blue row |
+| Laporan | `/(tabs)/laporan` | Period toggle (hari/minggu/bulan), payment breakdown, transaksi table, top produk, **export CSV** |
+| Inventaris | `/(tabs)/inventaris` | 4 stat cards, stock progress bar, CRUD produk (admin) / view‑only (kasir), **Import CSV (admin)**, `?highlight=` auto‑scroll + blue row |
 | User Management | `/(tabs)/user-management` | User table (mock), security info, activity log |
 | Scan | `/scan` | Barcode scanner (QR, EAN, Code128, Code39) |
-| Product Detail | `/product/{id}` | Item info, stock control, quick mutation, history |
-| Product Create | `/product/create` | Form tambah produk (admin only) |
-| Product Edit | `/product/edit/{id}` | Form edit produk (admin only) |
+| Product Detail | `/product/{id}` | Item info, **image**, stock control, quick mutation, history |
+| Product Create | `/product/create` | Form tambah produk (admin only) — **kamera/galeri + kompresi otomatis** |
+| Product Edit | `/product/edit/{id}` | Form edit produk (admin only) — **upload/replace image** |
 
 ## Role-Based Sidebar
 
@@ -157,6 +159,31 @@ Radius:     xl=12px, 2xl=16px, 3xl=24px, full=9999px
 4. Toggle Cetak Struk (thermal printer — console.log, butuh EAS Build)
 5. Toggle Cetak Invoice PDF (expo-print → auto download/share)
 6. Konfirmasi → API checkout → PDF otomatis (jika diaktifkan) → cart clear
+
+## Fitur Baru (v2)
+
+### 1. Export Transaksi CSV
+- Tombol **Ekspor** di Laporan → download semua transaksi sebagai CSV
+- Filter berdasarkan date range
+- File dibuka via share sheet (Save to Files / Share / Print)
+- `src/lib/export.ts` — fetch → FileSystem → Sharing
+
+### 2. Image Produk (Camera + Kompresi)
+- Tombol **"Ambil Foto"** (kamera) dan **"Pilih Galeri"** di form tambah/edit produk
+- Kompresi otomatis: resize 800px + quality 0.5 → ~50-100KB (`expo-image-manipulator`)
+- Disimpan sebagai base64 di field `image_url`
+- Tampil di card produk (`ProductCard`) dan detail produk (`product/[id]`)
+- `src/lib/image.ts` — pickFromCamera / pickFromGallery / compressImage / uriToBase64
+
+### 3. Import CSV Produk (Admin Only)
+- Tombol **"Import CSV"** di Inventaris (admin only, sebelah "+ Tambah Baru")
+- Pilih file CSV → upload via `POST /api/products/import` → Alert hasil (created/skipped/errors)
+- `src/features/inventory/hooks/useImportProducts.ts` — DocumentPicker → FormData → API
+
+### 4. Efisiensi APK
+- Hapus `expo-location` + `src/lib/location.ts` (dead code — tidak dipanggil screen manapun)
+- Enable `hermesBytecode: true` di EAS Build (JS bundle ~40% lebih kecil)
+- **Ukuran APK turun ~300KB native + 40% JS bundle**
 
 ## Catatan
 
