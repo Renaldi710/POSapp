@@ -20,6 +20,7 @@ export const ENDPOINTS = {
     DETAIL: (id: number) => `/api/transactions/${id}`,
     CREATE: '/api/transactions',
     RECEIPT: (id: number) => `/api/transactions/${id}/receipt`,
+    EXPORT: '/api/transactions/export',
   },
   REPORTS: {
     DAILY: '/api/reports/daily',

@@ -10,8 +10,11 @@
     "expo": "~57.0.4",
     "expo-camera": "~57.0.1",
     "expo-constants": "~57.0.3",
+    "expo-document-picker": "~57.0.1",
+    "expo-file-system": "~57.0.1",
+    "expo-image-manipulator": "~57.0.4",
+    "expo-image-picker": "~57.0.4",
     "expo-linking": "~57.0.2",
-    "expo-location": "~57.0.2",
     "expo-print": "~57.0.0",
     "expo-router": "~57.0.4",
     "expo-secure-store": "~57.0.0",
@@ -32,7 +35,6 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "lightningcss-linux-x64-gnu": "1.27.0",
     "typescript": "~6.0.3"
   },
   "scripts": {

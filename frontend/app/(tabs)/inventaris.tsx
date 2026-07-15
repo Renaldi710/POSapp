@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react'
-import { View, TextInput, TouchableOpacity, Text, ScrollView } from 'react-native'
-import { Search, Plus, Package, AlertTriangle, XCircle, TrendingUp } from 'lucide-react-native'
+import { View, TextInput, TouchableOpacity, Text, ScrollView, Alert } from 'react-native'
+import { Search, Plus, Upload, Package, AlertTriangle, XCircle, TrendingUp } from 'lucide-react-native'
 import { router, useLocalSearchParams } from 'expo-router'
+import * as DocumentPicker from 'expo-document-picker'
 import { useAuthStore } from '../../src/features/auth/store/useAuthStore'
 import { useInventory } from '../../src/features/inventory/hooks/useInventory'
+import { useImportProducts } from '../../src/features/inventory/hooks/useImportProducts'
 import DataTable from '../../src/components/ui/DataTable'
 import Badge from '../../src/components/ui/Badge'
 import StatCard from '../../src/components/ui/StatCard'
@@ -20,6 +22,18 @@ export default function InventarisScreen() {
   const [filterKategori, setFilterKategori] = useState('')
   const { data: products, isLoading } = useInventory(search)
   const { highlight } = useLocalSearchParams<{ highlight?: string }>()
+  const importMutation = useImportProducts()
+
+  const handleImportCSV = useCallback(async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: 'text/csv' })
+    if (result.canceled || !result.assets[0]) return
+    importMutation.mutate(result.assets[0].uri, {
+      onSuccess: (data) => {
+        Alert.alert('Import Selesai', `Berhasil: ${data.created}\nSkipped: ${data.skipped}${data.errors.length ? `\nError:\n${data.errors.slice(0, 3).join('\n')}` : ''}`)
+      },
+      onError: () => Alert.alert('Gagal', 'Gagal mengimpor file'),
+    })
+  }, [importMutation])
 
   const stockColor = (stock: number) => {
     if (stock === 0) return '#EF4444'
@@ -86,9 +100,15 @@ export default function InventarisScreen() {
             />
           </View>
           {isAdmin && (
-            <TouchableOpacity className="bg-primary px-4 py-2.5 rounded-xl" onPress={() => router.push('/product/create')}>
-              <Text className="text-white font-medium text-sm">+ Tambah Baru</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity className="bg-primary px-4 py-2.5 rounded-xl" onPress={() => router.push('/product/create')}>
+                <Text className="text-white font-medium text-sm">+ Tambah Baru</Text>
+              </TouchableOpacity>
+              <TouchableOpacity className="border border-border px-4 py-2.5 rounded-xl flex-row items-center gap-1.5" onPress={handleImportCSV} disabled={importMutation.isPending}>
+                <Upload size={16} color="#434655" />
+                <Text className="text-text-medium font-medium text-sm">{importMutation.isPending ? 'Mengimpor...' : 'Import CSV'}</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
 
