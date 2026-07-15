@@ -44,6 +44,9 @@ npx eas build --profile preview --platform android --non-interactive
 - **Inventaris:** Tambah Baru button + Edit column hidden for kasir
 - **Payment flow:** `PaymentDialog.tsx` sends `{ metode, uangDiterima, cetakStruk, cetakInvoice }` → `useCheckout.ts`
 - **Invoice PDF:** `src/lib/invoice.ts` — generates HTML, converts via `Print.printToFileAsync`, shares via `Sharing.shareAsync`
+- **Image produk:** `src/lib/image.ts` — `pickFromCamera()`, `pickFromGallery()`, `compressImage()` (800px + 0.5 quality → ~50-100KB), `uriToBase64()` — digunakan di `ProductForm.tsx`
+- **Export CSV:** `src/lib/export.ts` — `downloadTransactionsCSV()` → fetch transaksi → `FileSystem` → `Sharing` — tombol Ekspor di `laporan.tsx`
+- **Import CSV:** `useImportProducts.ts` — `DocumentPicker` → `FormData` → `POST /api/products/import` — tombol di `inventaris.tsx` (admin only)
 - **SidebarOverlay:** Animated.View must have explicit `width: 280` to prevent ScrollView collapse
 - **Dashboard low‑stock:** `dashboard.tsx` uses `useProducts()` to fetch all products, filters `stock < 10`, sorts ascending; tapping a product navigates to `inventaris.tsx?highlight={id}`
 - **DataTable highlight:** `DataTable.tsx` accepts `highlightedKey` prop — matching row gets `bg-blue-50` and FlatList auto‑scrolls via `initialScrollIndex`
@@ -84,9 +87,9 @@ src/
 │   ├── auth/                 # useAuth, useAuthStore
 │   ├── cart/                 # useCartStore, CartBar, CartPanel
 │   ├── products/             # useProducts, ProductCard
-│   ├── inventory/            # useInventory, useStockMutation, useProductMutation, ProductForm
+│   ├── inventory/            # useInventory, useStockMutation, useProductMutation, ProductForm, useImportProducts
 │   ├── transactions/         # useCheckout, useTransactions, PaymentDialog
 │   └── reports/              # useReports
-├── lib/                      # printer.ts, invoice.ts, storage.ts, queryClient.ts
+├── lib/                      # printer.ts, invoice.ts, storage.ts, queryClient.ts, image.ts, export.ts
 └── stores/                   # useSidebarStore
 ```
